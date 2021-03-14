@@ -3,20 +3,21 @@ package com.scorealarm.meeting.rooms.list
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.R
+import com.scorealarm.meeting.rooms.models.Meeting
 
-class MeetingRoomListAdapter(private val actionListener: MeetingRoomListItemActionListener) :
+class MeetingListAdapter(private val actionListener: MeetingListItemActionListener) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val items = mutableListOf<MeetingRoom>()
+    private val items = mutableListOf<Meeting>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
-        MeetingRoomViewHolder(
+        MeetingViewHolder(
             LayoutInflater.from(parent.context)
-                .inflate(android.R.layout.simple_list_item_1, parent, false), actionListener)
+                .inflate(R.layout.item_meeting_list, parent, false), actionListener)
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as MeetingRoomViewHolder).bind(items[position])
+        (holder as MeetingViewHolder).bind(items[position])
     }
 
     override fun getItemViewType(position: Int): Int = 0
@@ -27,14 +28,9 @@ class MeetingRoomListAdapter(private val actionListener: MeetingRoomListItemActi
     override fun getItemId(position: Int): Long =
         items[position].id.toLong()
 
-    fun update(input: List<MeetingRoom>) {
+    fun update(input: List<Meeting>) {
         items.clear()
         items.addAll(input)
-        notifyDataSetChanged()
-    }
-
-    fun clear() {
-        items.clear()
         notifyDataSetChanged()
     }
 
