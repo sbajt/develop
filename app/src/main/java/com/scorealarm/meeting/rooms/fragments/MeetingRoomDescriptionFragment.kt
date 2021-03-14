@@ -31,7 +31,7 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
         observeMeetingRoom()
         setupButtonViews()
         timeView?.text = DateTime.now().toString("HH:mm")
-//        runClock()
+        runClock()
     }
 
     override fun onDestroy() {
@@ -53,13 +53,13 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     private fun runClock() {
         compositeDisposable.add(
-            Observable.interval(1, TimeUnit.SECONDS, Schedulers.newThread())
+            Observable.interval(1, TimeUnit.MINUTES, Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    timeView?.text = DateTime.now().toString("HH:mm:ss")
+                    timeView?.text = DateTime.now().toString("HH:mm")
                     setDescriptionViews(meetingRoom)
-//                    if(it % 15 == 0L)
-
+//                    if (it % 15 == 0L)
+                        // TODO pull data from REST
                 }) { Log.e(TAG, it.toString()) }
         )
     }

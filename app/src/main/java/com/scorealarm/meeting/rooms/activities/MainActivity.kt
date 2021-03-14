@@ -34,8 +34,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             getPreferences(Context.MODE_PRIVATE).getString(meetingRoomKey, ""),
             MeetingRoom::class.java
         )
-        navigate(meetingRoom)
-        observeMeetingRoom()
+        navigate(meetingRoom) {
+            if (it) observeMeetingRoom()
+        }
     }
 
     override fun onDestroy() {
@@ -50,11 +51,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .subscribe(::navigate) { Log.e(TAG, it.toString()) })
     }
 
-    private fun navigate(meetingRoom: MeetingRoom?) {
+    private fun navigate(meetingRoom: MeetingRoom?, meetingRoomChooser: (Boolean) -> Unit = {}) {
         if (meetingRoom == null) {
             supportFragmentManager.commit {
                 replace<MeetingRoomListFragment>(R.id.containerLayout)
             }
+            meetingRoomChooser.invoke(true)
         } else {
             if (meetingRoomSubject.value == null) {
                 compositeDisposable.dispose()
@@ -68,6 +70,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     replace<MeetingListFragment>(R.id.meetingListContainer)
                 }
             }
+            meetingRoomChooser.invoke(false)
         }
     }
 
