@@ -123,7 +123,7 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
             Meeting(
                 id = "3",
                 title = "Meeting 4",
-                organizer = "Luls",
+                organizer = "Lula",
                 invitesNumber = 1,
                 startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(18),
                 endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(19)

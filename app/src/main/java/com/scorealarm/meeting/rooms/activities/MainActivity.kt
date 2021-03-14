@@ -17,14 +17,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import io.reactivex.subjects.PublishSubject
-import io.reactivex.subjects.ReplaySubject
 import net.danlew.android.joda.JodaTimeInitializer
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
-    val meetingRoomSubject = BehaviorSubject.create<MeetingRoom>()
+    val meetingRoomSubject = BehaviorSubject.create<MeetingRoom?>()
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -33,14 +30,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         AppInitializer.getInstance(this).initializeComponent(JodaTimeInitializer::class.java)
 
-        navigate(
-            RestService.gson.fromJson(
-                getPreferences(Context.MODE_PRIVATE).getString(
-                    meetingRoomKey,
-                    ""
-                ), MeetingRoom::class.java
-            )
+        val meetingRoom = RestService.gson.fromJson(
+            getPreferences(Context.MODE_PRIVATE).getString(meetingRoomKey, ""),
+            MeetingRoom::class.java
         )
+        navigate(meetingRoom)
         observeMeetingRoom()
     }
 
@@ -62,6 +56,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 replace<MeetingRoomListFragment>(R.id.containerLayout)
             }
         } else {
+            if (meetingRoomSubject.value == null) {
+                compositeDisposable.dispose()
+                meetingRoomSubject.onNext(meetingRoom)
+            }
+
             supportFragmentManager.run {
                 commit {
                     remove(MeetingRoomListFragment())

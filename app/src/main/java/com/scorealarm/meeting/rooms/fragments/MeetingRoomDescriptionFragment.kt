@@ -75,7 +75,8 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
                     currentMeeting.startDateTime.toString("HH:mm") +
                     "- ${currentMeeting.endDateTime.toString("HH:mm")}"
             meetingDescription2View?.text =
-                "Organizer: ${currentMeeting.organizer} Attendee count: ${currentMeeting.invitesNumber}"
+                "Organizer: ${currentMeeting.organizer}\n" +
+                        "Attendee count: ${currentMeeting.invitesNumber}"
         }
 
     }
