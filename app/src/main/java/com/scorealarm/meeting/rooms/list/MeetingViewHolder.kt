@@ -1,13 +1,11 @@
 package com.scorealarm.meeting.rooms.list
 
 import android.graphics.Color
-import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.scorealarm.meeting.rooms.R
-import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.Meeting
 import kotlinx.android.extensions.LayoutContainer
 
@@ -29,7 +27,6 @@ class MeetingViewHolder(
             attendeeCountView?.text = invitesNumber.toString()
         }
         containerView.run {
-            addRippleEffect(this)
             DrawableCompat.wrap(background)
             DrawableCompat.setTint(
                 background,
@@ -43,15 +40,4 @@ class MeetingViewHolder(
         }
     }
 
-    private fun addRippleEffect(view: View?) {
-        val typedValue = TypedValue()
-        view?.run {
-            context?.theme?.resolveAttribute(
-                android.R.attr.selectableItemBackground,
-                typedValue,
-                true
-            )
-            setBackgroundResource(typedValue.resourceId)
-        }
-    }
 }
