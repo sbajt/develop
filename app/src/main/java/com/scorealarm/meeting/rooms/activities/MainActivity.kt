@@ -36,11 +36,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             getPreferences(Context.MODE_PRIVATE).getString(meetingRoomKey, ""),
             MeetingRoom::class.java
         )
-        if (meetingRoom == null)
+        if (meetingRoom == null) {
             supportFragmentManager.commit {
                 replace<MeetingRoomListFragment>(R.id.containerLayout)
             }
-        else {
+            supportActionBar?.title = "Meeting room chooser"
+        } else {
             meetingRoomSubject.onNext(meetingRoom)
         }
     }
@@ -114,7 +115,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun onMeetingRoomChoose(meetingRoom: MeetingRoom) {
         updateMeetingListInMeetingRoom(meetingRoom)
-
         supportFragmentManager.run {
             commit {
                 remove(MeetingRoomListFragment())
@@ -122,6 +122,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 replace<MeetingListFragment>(R.id.meetingListContainer)
             }
         }
+        supportActionBar?.title = meetingRoom.name
     }
 
     private fun observeMeetingRoom() {
