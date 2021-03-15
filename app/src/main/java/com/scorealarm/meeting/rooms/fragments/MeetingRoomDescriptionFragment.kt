@@ -1,9 +1,7 @@
 package com.scorealarm.meeting.rooms.fragments
 
 import android.content.Context
-import android.os.Bundle
 import android.util.Log
-import android.view.View
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
@@ -21,66 +19,50 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     private val compositeDisposable = CompositeDisposable()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        observeMeetingRoom()
-        setupButtonViews()
-    }
-
     override fun onStart() {
         super.onStart()
-        timeView?.text = DateTime.now().toString("HH:mm")
-        val meetingRoom = RestService.gson.fromJson(
-            activity?.getPreferences(Context.MODE_PRIVATE)
-                ?.getString(MainActivity.meetingRoomKey, "{}"), MeetingRoom::class.java
-        )
-        setDescriptionViews(meetingRoom)
-        runClock(meetingRoom)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        compositeDisposable.dispose()
-    }
-
-    private fun observeMeetingRoom() {
         compositeDisposable.add(
-            (activity as MainActivity).meetingRoomSubject
+            Observable.just(
+                RestService.gson.fromJson(
+                    activity?.getPreferences(Context.MODE_PRIVATE)
+                        ?.getString(MainActivity.meetingRoomKey, ""), MeetingRoom::class.java
+                )
+            )
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    meetingRoomNameView?.text = it?.name ?: ""
+                    meetingRoomNameView?.text = it?.name
                     setDescriptionViews(it)
-                }) { Log.e(TAG, it.toString()) }
+                    timeView?.text = DateTime.now().toString("HH:mm:ss")
+                    runClock(it)
+                 }, { Log.e(TAG, it.toString()) })
         )
+//        setupButtonViews()
     }
 
-    private fun runClock(meetingRoom: MeetingRoom?) {
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable.dispose()
+    }
+
+    private fun runClock(meetingRoom: MeetingRoom) {
         compositeDisposable.add(
             Observable.interval(1, TimeUnit.SECONDS, Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    timeView?.text = DateTime.now().toString("HH:mm")
-                    if (it > 0 && it % 15L == 0L) {
-                        val oldMeetingList = meetingRoom?.meetingList
-                        (activity as? MainActivity)?.setMeetingListForMeetingRoom(meetingRoom)
-                        val newMeetingList = meetingRoom?.meetingList
-                        if (oldMeetingList?.size != newMeetingList?.size || oldMeetingList?.containsAll(
-                                oldMeetingList
-                            )?.not() == true
-                        ) {
-                            setDescriptionViews(meetingRoom)
-                            updateMeetingList()
-                        }
-                    }
+                    timeView?.text = DateTime.now().toString("HH:mm:ss")
+                    setDescriptionViews(meetingRoom)
+//                    if (it > 0 && it % 15L == 0L) {
+//                        (activity as? MainActivity)?.updateMeetingListInMeetingRoom(meetingRoom)
+//                    }
                 }) { Log.e(TAG, it.toString()) }
         )
     }
 
-    private fun setDescriptionViews(meetingRoom: MeetingRoom?) {
+    private fun setDescriptionViews(meetingRoom: MeetingRoom) {
         val currentMeeting =
-            meetingRoom?.meetingList?.findLast { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
-        if (meetingRoom == null || currentMeeting == null) {
+            meetingRoom.meetingList.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow } // FIX
+        if (currentMeeting == null) {
             meetingDescription1View?.text = "No meeting in progress."
             meetingDescription2View?.text = ""
         } else {
@@ -108,10 +90,6 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
                 it.isClickable = false
             }
         }
-    }
-
-    private fun updateMeetingList() {
-
     }
 
 

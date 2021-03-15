@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.dispose()
     }
 
-    fun setMeetingListForMeetingRoom(meetingRoom: MeetingRoom?): List<Meeting> {
+    fun updateMeetingListInMeetingRoom(meetingRoom: MeetingRoom?) {
         meetingRoom?.meetingList?.clear()
         meetingRoom?.meetingList?.add(
             Meeting(
@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 organizer = "Marin",
                 invitesNumber = 5,
                 startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14).plusMinutes(30),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15),
             )
         )
         meetingRoom?.meetingList?.add(
@@ -93,8 +93,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 title = "Meeting 4",
                 organizer = "Lula",
                 invitesNumber = 1,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(18),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(19)
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16)
             )
         )
         meetingRoom?.meetingList?.add(
@@ -103,15 +103,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 title = "Meeting 5",
                 organizer = "Lolić",
                 invitesNumber = 3,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(20),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(20).plusMinutes(30),
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(17).plusMinutes(30),
             )
         )
-        return meetingRoom?.meetingList ?: emptyList()
+        getPreferences(Context.MODE_PRIVATE).edit()
+            .putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
+            .commit()
     }
 
     private fun onMeetingRoomChoose(meetingRoom: MeetingRoom) {
-        setMeetingListForMeetingRoom(meetingRoom)
+        updateMeetingListInMeetingRoom(meetingRoom)
+
         supportFragmentManager.run {
             commit {
                 remove(MeetingRoomListFragment())
