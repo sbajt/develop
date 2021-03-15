@@ -24,6 +24,7 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:textSize="11sp"
+            android:textStyle="italic"
             tools:text="Current meeting name, start time - end time" />
 
         <TextView
@@ -32,6 +33,7 @@
             android:layout_height="wrap_content"
             android:maxLines="2"
             android:textSize="11sp"
+            android:textStyle="italic"
             tools:text="Meeting organizer, attendee count" />
 
         <LinearLayout
@@ -43,18 +45,16 @@
                 android:id="@+id/extendButtonView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:visibility="gone"
-                android:text="Extend" />
+                android:text="Extend"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/endNowButtonView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="2dp"
-                android:visibility="gone"
-                android:maxLines="1"
-                android:text="End now" />
+                android:text="End now"
+                android:visibility="gone" />
 
         </LinearLayout>
     </LinearLayout>

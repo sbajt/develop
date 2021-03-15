@@ -8,7 +8,6 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingListAdapter
 import com.scorealarm.meeting.rooms.list.MeetingListItemActionListener
-import com.scorealarm.meeting.rooms.models.MeetingRoom
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -24,12 +23,25 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         recyclerView.adapter = listAdapter
+    }
+
+    override fun onStart() {
+        super.onStart()
+        observeMeetingRoom()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable.dispose()
+    }
+
+    private fun observeMeetingRoom() {
         compositeDisposable.add(
             (activity as MainActivity).meetingRoomSubject
                 .subscribeOn(Schedulers.newThread())
-                .map {
-                    it.meetingList.filter {
-                        it.startDateTime.isAfter(
+                .map { meetingRoom ->
+                    meetingRoom.meetingList.filter { meeting ->
+                        meeting.startDateTime.isAfter(
                             DateTime.now().withTimeAtStartOfDay()
                         )
                     }
@@ -37,11 +49,6 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list),
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(listAdapter::update) { Log.e(TAG, it.toString()) }
         )
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        compositeDisposable.dispose()
     }
 
     override fun click(meetingId: String) {

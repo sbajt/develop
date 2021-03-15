@@ -1,9 +1,7 @@
 package com.scorealarm.meeting.rooms.list
 
-import android.graphics.Color
 import android.view.View
 import android.widget.TextView
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.models.Meeting
@@ -27,11 +25,6 @@ class MeetingViewHolder(
             attendeeCountView?.text = invitesNumber.toString()
         }
         containerView.run {
-            DrawableCompat.wrap(background)
-            DrawableCompat.setTint(
-                background,
-                Color.parseColor("#33111111")
-            )
             isClickable = true
             setOnClickListener {
                 actionListener.click(meeting.id)

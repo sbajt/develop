@@ -11,17 +11,19 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
+import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.ReplaySubject
 import net.danlew.android.joda.JodaTimeInitializer
+import org.joda.time.DateTime
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
-    val meetingRoomSubject = BehaviorSubject.create<MeetingRoom?>()
+    val meetingRoomSubject = ReplaySubject.create<MeetingRoom>(1)
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -34,44 +36,101 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             getPreferences(Context.MODE_PRIVATE).getString(meetingRoomKey, ""),
             MeetingRoom::class.java
         )
-        navigate(meetingRoom) {
-            if (it) observeMeetingRoom()
+        if (meetingRoom == null)
+            supportFragmentManager.commit {
+                replace<MeetingRoomListFragment>(R.id.containerLayout)
+            }
+        else {
+            meetingRoomSubject.onNext(meetingRoom)
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStart() {
+        super.onStart()
+        observeMeetingRoom()
+    }
+
+    override fun onStop() {
+        super.onStop()
         compositeDisposable.dispose()
+    }
+
+    fun setMeetingListForMeetingRoom(meetingRoom: MeetingRoom?): List<Meeting> {
+        meetingRoom?.meetingList?.clear()
+        meetingRoom?.meetingList?.add(
+            Meeting(
+                id = "0",
+                title = "Meeting 1",
+                organizer = "Lula",
+                invitesNumber = 12,
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(9),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(10)
+            )
+        )
+        meetingRoom?.meetingList?.add(
+            Meeting(
+                id = "1",
+                title = "Meeting 2",
+                organizer = "Vatroslav",
+                invitesNumber = 3,
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(12),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(13)
+            )
+        )
+        meetingRoom?.meetingList?.add(
+            Meeting(
+                id = "2",
+                title = "Meeting 3",
+                organizer = "Marin",
+                invitesNumber = 5,
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14).plusMinutes(30),
+            )
+        )
+        meetingRoom?.meetingList?.add(
+            Meeting(
+                id = "3",
+                title = "Meeting 4",
+                organizer = "Lula",
+                invitesNumber = 1,
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(18),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(19)
+            )
+        )
+        meetingRoom?.meetingList?.add(
+            Meeting(
+                id = "4",
+                title = "Meeting 5",
+                organizer = "Lolić",
+                invitesNumber = 3,
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(20),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(20).plusMinutes(30),
+            )
+        )
+        return meetingRoom?.meetingList ?: emptyList()
+    }
+
+    private fun onMeetingRoomChoose(meetingRoom: MeetingRoom) {
+        setMeetingListForMeetingRoom(meetingRoom)
+        supportFragmentManager.run {
+            commit {
+                remove(MeetingRoomListFragment())
+                replace<MeetingRoomDescriptionFragment>(R.id.meetingRoomDescriptionContainer)
+                replace<MeetingListFragment>(R.id.meetingListContainer)
+            }
+        }
     }
 
     private fun observeMeetingRoom() {
         compositeDisposable.add(
             meetingRoomSubject.subscribeOn(Schedulers.newThread())
+                .firstElement()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(::navigate) { Log.e(TAG, it.toString()) })
-    }
-
-    private fun navigate(meetingRoom: MeetingRoom?, meetingRoomChooser: (Boolean) -> Unit = {}) {
-        if (meetingRoom == null) {
-            supportFragmentManager.commit {
-                replace<MeetingRoomListFragment>(R.id.containerLayout)
-            }
-            meetingRoomChooser.invoke(true)
-        } else {
-            if (meetingRoomSubject.value == null) {
-                compositeDisposable.dispose()
-                meetingRoomSubject.onNext(meetingRoom)
-            }
-
-            supportFragmentManager.run {
-                commit {
-                    remove(MeetingRoomListFragment())
-                    replace<MeetingRoomDescriptionFragment>(R.id.meetingRoomDescriptionContainer)
-                    replace<MeetingListFragment>(R.id.meetingListContainer)
-                }
-            }
-            meetingRoomChooser.invoke(false)
-        }
+                .subscribe({
+                    onMeetingRoomChoose(it)
+                    compositeDisposable.dispose()
+                }, { Log.e(TAG, it.toString()) })
+        )
     }
 
     companion object {
