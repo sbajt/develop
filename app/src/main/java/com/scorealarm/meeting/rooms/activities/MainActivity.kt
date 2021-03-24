@@ -14,6 +14,7 @@ import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -56,7 +57,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.dispose()
     }
 
-    fun updateMeetingListInMeetingRoom(meetingRoom: MeetingRoom?) {
+    private fun updateMeetingListInMeetingRoom(meetingRoom: MeetingRoom?) {
         meetingRoom?.meetingList?.clear()
         meetingRoom?.meetingList?.add(
             Meeting(
@@ -142,6 +143,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         const val meetingRoomKey = "meetingRoom"
 
         private val TAG = MainActivity::class.java.canonicalName
+
+        fun getData(): Observable<String> =
+            RestService.getMockData()
+
     }
 
 

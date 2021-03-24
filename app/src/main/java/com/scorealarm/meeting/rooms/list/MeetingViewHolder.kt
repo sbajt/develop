@@ -9,7 +9,6 @@ import kotlinx.android.extensions.LayoutContainer
 
 class MeetingViewHolder(
     override val containerView: View,
-    private val actionListener: MeetingListItemActionListener
 ) : RecyclerView.ViewHolder(containerView),
     LayoutContainer {
 
@@ -23,13 +22,6 @@ class MeetingViewHolder(
             subtitleView?.text =
                 "${startDateTime.toString("HH:mm")} - ${endDateTime.toString("HH:mm")}"
             attendeeCountView?.text = invitesNumber.toString()
-        }
-        containerView.run {
-            isClickable = true
-            setOnClickListener {
-                actionListener.click(meeting.id)
-                isClickable = false
-            }
         }
     }
 

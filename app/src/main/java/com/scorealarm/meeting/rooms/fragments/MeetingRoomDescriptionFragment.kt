@@ -8,12 +8,12 @@ import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
+import org.joda.time.DateTimeFieldType
 import java.util.concurrent.TimeUnit
 
 class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_description) {
@@ -34,7 +34,6 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
                 .subscribe({
                     meetingRoomNameView?.text = it?.name
                     setDescriptionViews(it)
-                    timeView?.text = DateTime.now().toString("HH:mm")
                     runClock(it)
                 }, { Log.e(TAG, it.toString()) })
         )
@@ -47,27 +46,49 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
     }
 
     private fun runClock(meetingRoom: MeetingRoom) {
+        setTimeView()
         compositeDisposable.add(
-            Observable.interval(1, TimeUnit.SECONDS, Schedulers.newThread())
+            Observable.just(Any())
+                .delay {
+                    Observable.timer(
+                        DateTime.now()[DateTimeFieldType.secondOfMinute()].toLong(),
+                        TimeUnit.SECONDS
+                    )
+                }
+                .flatMap { Observable.just(it) }
+                .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    timeView?.text = DateTime.now().toString("HH:mm:ss")
-                    setDescriptionViews(meetingRoom)
-                    if (it > 0 && it % (15L * 60L) == 0L) {
-                        compositeDisposable.add(
-                            RestService.getMeetingList(meetingRoom.id)
-                                .subscribeOn(Schedulers.newThread())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe({
-                                    (activity as MainActivity).run {
-                                        updateMeetingListInMeetingRoom(meetingRoom)
-                                        meetingRoomSubject.onNext(meetingRoom)
-                                    }
-                                }, { Log.e(TAG, it.toString()) })
-                        )
-                    }
-                }) { Log.e(TAG, it.toString()) }
+                    setTimeView()
+                    compositeDisposable.add(
+                        Observable.interval(1, TimeUnit.MINUTES, Schedulers.newThread())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doOnNext {
+                                if (it % 5 == 0L)
+                                    compositeDisposable.add(
+                                        MainActivity.getData()
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribe({ data ->
+                                                Log.d(TAG, data)
+//                                                (activity as MainActivity).run {
+//                                                    updateMeetingListInMeetingRoom(meetingRoom)
+//                                                    meetingRoomSubject.onNext(meetingRoom)
+//                                                }
+                                            }, { Log.e(TAG, it.toString()) })
+                                    )
+                            }
+                            .subscribe({
+                                setTimeView()
+                                setDescriptionViews(meetingRoom)
+                            }) { Log.e(TAG, it.toString()) }
+                    )
+                }, { Log.e(TAG, it.toString()) })
         )
+
+    }
+
+    private fun setTimeView() {
+        timeView?.text = DateTime.now().toString("HH:mm")
     }
 
     private fun setDescriptionViews(meetingRoom: MeetingRoom) {
@@ -89,17 +110,17 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     private fun setupButtonViews() {
         extendButtonView?.run {
-            isClickable = true
+            isEnabled = true
             setOnClickListener {
                 Log.d(TAG, "Extend meeting clicked")
-                it.isClickable = false
+                it.isEnabled = false
             }
         }
         endNowButtonView?.run {
-            isClickable = true
+            isEnabled = true
             setOnClickListener {
                 Log.d(TAG, "End now meeting clicked")
-                it.isClickable = false
+                it.isEnabled = false
             }
         }
     }

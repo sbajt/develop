@@ -6,15 +6,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.models.Meeting
 
-class MeetingListAdapter(private val actionListener: MeetingListItemActionListener) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MeetingListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<Meeting>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
         MeetingViewHolder(
             LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_meeting_list, parent, false), actionListener)
+                .inflate(R.layout.item_meeting_list, parent, false)
+        )
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         (holder as MeetingViewHolder).bind(items[position])

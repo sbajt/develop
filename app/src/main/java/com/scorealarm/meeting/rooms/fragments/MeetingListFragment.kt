@@ -7,17 +7,15 @@ import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingListAdapter
-import com.scorealarm.meeting.rooms.list.MeetingListItemActionListener
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_list.*
 import org.joda.time.DateTime
 
-class MeetingListFragment : Fragment(R.layout.fragment_meeting_list),
-    MeetingListItemActionListener {
+class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
-    private val listAdapter = MeetingListAdapter(this)
+    private val listAdapter = MeetingListAdapter()
     private val compositeDisposable = CompositeDisposable()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -50,11 +48,6 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list),
                 .subscribe(listAdapter::update) { Log.e(TAG, it.toString()) }
         )
     }
-
-    override fun click(meetingId: String) {
-        Log.d(TAG, "Meeting with id $meetingId clicked..,")
-    }
-
 
     companion object {
 

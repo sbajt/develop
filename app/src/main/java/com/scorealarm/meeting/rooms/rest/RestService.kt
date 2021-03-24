@@ -2,8 +2,6 @@ package com.scorealarm.meeting.rooms.rest
 
 import com.google.gson.GsonBuilder
 import com.scorealarm.meeting.rooms.Config
-import com.scorealarm.meeting.rooms.models.Meeting
-import com.scorealarm.meeting.rooms.models.MeetingRoom
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
@@ -12,7 +10,6 @@ import org.joda.time.DateTime
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 import java.util.concurrent.TimeUnit
 
 object RestService {
@@ -40,13 +37,15 @@ object RestService {
 //    fun getMeetingRoomList(): Observable<List<MeetingRoom>> =
 //        api.getMeetingRooms().subscribeOn(Schedulers.io())
 
-    fun getMeetingList(roomId: String): Observable<String> =
+    fun getMockData(): Observable<String> =
         Retrofit.Builder()
             .baseUrl(Config.MOCK_BASE_URL)
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .addConverterFactory(GsonConverterFactory.create(gson))
             .client(okHttpClient)
             .build()
-            .create()
-//        api.getMeetings(roomId).subscribeOn(Schedulers.io())
+            .create(MockApi::class.java)
+            .getMockData()
+            .subscribeOn(Schedulers.io())
+
 }
