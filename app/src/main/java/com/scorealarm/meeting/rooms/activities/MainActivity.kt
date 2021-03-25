@@ -44,98 +44,19 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             supportActionBar?.title = "Meeting room chooser"
         } else {
             meetingRoomSubject.onNext(meetingRoom)
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        observeMeetingRoom()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        compositeDisposable.dispose()
-    }
-
-    private fun updateMeetingListInMeetingRoom(meetingRoom: MeetingRoom?) {
-        meetingRoom?.meetingList?.clear()
-        meetingRoom?.meetingList?.add(
-            Meeting(
-                id = "0",
-                title = "Meeting 1",
-                organizer = "Lula",
-                invitesNumber = 12,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(9),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(10)
-            )
-        )
-        meetingRoom?.meetingList?.add(
-            Meeting(
-                id = "1",
-                title = "Meeting 2",
-                organizer = "Vatroslav",
-                invitesNumber = 3,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(12),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(13)
-            )
-        )
-        meetingRoom?.meetingList?.add(
-            Meeting(
-                id = "2",
-                title = "Meeting 3",
-                organizer = "Marin",
-                invitesNumber = 5,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15),
-            )
-        )
-        meetingRoom?.meetingList?.add(
-            Meeting(
-                id = "3",
-                title = "Meeting 4",
-                organizer = "Lula",
-                invitesNumber = 1,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16)
-            )
-        )
-        meetingRoom?.meetingList?.add(
-            Meeting(
-                id = "4",
-                title = "Meeting 5",
-                organizer = "Lolić",
-                invitesNumber = 3,
-                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16),
-                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(17).plusMinutes(30),
-            )
-        )
-        getPreferences(Context.MODE_PRIVATE).edit()
-            .putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
-            .commit()
-    }
-
-    private fun onMeetingRoomChoose(meetingRoom: MeetingRoom) {
-        updateMeetingListInMeetingRoom(meetingRoom)
-        supportFragmentManager.run {
-            commit {
-                remove(MeetingRoomListFragment())
+            supportFragmentManager.commit {
+                remove(MeetingRoomListFragment.getInstance())
                 replace<MeetingRoomDescriptionFragment>(R.id.meetingRoomDescriptionContainer)
                 replace<MeetingListFragment>(R.id.meetingListContainer)
             }
+            supportActionBar?.title = meetingRoom.name
         }
-        supportActionBar?.title = meetingRoom.name
+
     }
 
-    private fun observeMeetingRoom() {
-        compositeDisposable.add(
-            meetingRoomSubject.subscribeOn(Schedulers.newThread())
-                .firstElement()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    onMeetingRoomChoose(it)
-                    compositeDisposable.dispose()
-                }, { Log.e(TAG, it.toString()) })
-        )
+    override fun onDestroy() {
+        super.onDestroy()
+        compositeDisposable.dispose()
     }
 
     companion object {
@@ -144,9 +65,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         private val TAG = MainActivity::class.java.canonicalName
 
-        fun getData(): Observable<String> =
+        fun getMeetingRoomData(meetingRoomId: String): Observable<String> =
             RestService.getMockData()
-
     }
 
 
