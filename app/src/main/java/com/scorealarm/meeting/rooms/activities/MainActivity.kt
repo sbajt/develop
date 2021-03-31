@@ -2,6 +2,7 @@ package com.scorealarm.meeting.rooms.activities
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.startup.AppInitializer
@@ -14,12 +15,12 @@ import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.subjects.ReplaySubject
+import io.reactivex.subjects.PublishSubject
 import net.danlew.android.joda.JodaTimeInitializer
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
-    val meetingRoomSubject = ReplaySubject.create<MeetingRoom>(1)
+    val meetingRoomSubject = PublishSubject.create<MeetingRoom>()
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -84,7 +85,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
 
     fun fetchMeetingsByMeetingRoom(meetingRoomId: String): Observable<List<Meeting>> =
-        RestService.fetchMeetingList(meetingRoomId) // todo fetch real data, currently mocked data
+        RestService.fetchMeetingList(meetingRoomId)
 
 
     fun updateMeetingRoomWithMeetings(meetingRoom: MeetingRoom, meetings: List<Meeting>) {

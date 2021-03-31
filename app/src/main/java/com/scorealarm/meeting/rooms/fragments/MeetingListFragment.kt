@@ -34,6 +34,8 @@ class MeetingListFragment(
 
     override fun onStart() {
         super.onStart()
+        initMeetings(meetingRoom)
+        observeMeetingList()
         updateMeetingList(
             meetingRoom = meetingRoom,
             period = 5,
@@ -46,6 +48,29 @@ class MeetingListFragment(
         compositeDisposable.dispose()
     }
 
+    private fun initMeetings(meetingRoom: MeetingRoom) {
+        compositeDisposable.add(
+            Observable.defer {
+                if (wifiManager.isWifiEnabled)
+                    (activity as MainActivity).fetchMeetingsByMeetingRoom(meetingRoom.id)
+                else
+                    Observable.empty()
+            }.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(listAdapter::update) { Log.e(TAG, it.toString()) }
+        )
+    }
+
+    private fun observeMeetingList() {
+        compositeDisposable.add(
+            (activity as MainActivity).meetingRoomSubject
+                .subscribeOn(Schedulers.newThread())
+                .flatMap { Observable.just(it.meetingList) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(listAdapter::update) { Log.e(TAG, it.toString()) }
+        )
+    }
+
     private fun updateMeetingList(
         meetingRoom: MeetingRoom,
         period: Long,
@@ -53,7 +78,7 @@ class MeetingListFragment(
     ) {
         compositeDisposable.add(
             Observable.interval(period, periodUnit, Schedulers.newThread())
-                .takeWhile{ wifiManager.isWifiEnabled }
+                .takeWhile { wifiManager.isWifiEnabled }
                 .flatMap { (activity as MainActivity).fetchMeetingsByMeetingRoom(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ meetings ->

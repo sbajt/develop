@@ -38,11 +38,11 @@ object RestService {
 
     fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
 //        api.getMeetingRooms().subscribeOn(Schedulers.io())
-        Observable.just(mockMeetingRoomList()).subscribeOn(Schedulers.io())
+        Observable.just(mockMeetingRoomList()).subscribeOn(Schedulers.io()) // todo fetch real data, currently mocked data
 
     fun fetchMeetingList(meetingRoomId: String): Observable<List<Meeting>> =
 //        api.getMeetings(meetingRoomId).subscribeOn(Schedulers.io())
-        Observable.just(mockMeetingList()).subscribeOn(Schedulers.io())
+        Observable.just(mockMeetingList()).subscribeOn(Schedulers.io()) // todo fetch real data, currently mocked data
 
     private fun mockMeetingRoomList() =
         listOf(
@@ -101,6 +101,14 @@ object RestService {
                 invitesNumber = 3,
                 startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16),
                 endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(17).plusMinutes(30),
+            ),
+            Meeting(
+                id = "5",
+                title = "Meeting 6",
+                organizer = "Test",
+                invitesNumber = 2,
+                startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(10),
+                endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(12),
             )
         )
 

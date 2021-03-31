@@ -21,7 +21,7 @@ class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
 
     override fun onStart() {
         super.onStart()
-        runClock()
+        initClock()
         setupDescriptionViews(meetingRoom)
         observeMeetingRoom()
 //        setupButtonViews()
@@ -32,32 +32,30 @@ class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
         compositeDisposable.dispose()
     }
 
-    private fun runClock() {
+    private fun initClock() {
         compositeDisposable.add(
-            Observable.just(Any())
-                .delay {
-                    Observable.timer(
-                        DateTime.now()[DateTimeFieldType.secondOfMinute()].toLong(),
-                        TimeUnit.SECONDS
-                    )
-                }
-                .flatMap { Observable.just(it) }
+            Observable.just(DateTime.now())
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    setTimeText()
-                    compositeDisposable.add(
-                        Observable.interval(1, TimeUnit.MINUTES, Schedulers.newThread())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe({ setTimeText() }) { Log.e(TAG, it.toString()) }
-                    )
+                    setTimeText(it)
+                    runClock()
                 }, { Log.e(TAG, it.toString()) })
         )
 
     }
 
-    private fun setTimeText() {
-        timeView?.text = DateTime.now().toString("HH:mm")
+    private fun setTimeText(dateTime: DateTime) {
+        timeView?.text = dateTime.toString("HH:mm")
+    }
+
+    private fun runClock() {
+        compositeDisposable.add(
+            Observable.interval(1, TimeUnit.MINUTES, Schedulers.newThread())
+                .map { DateTime.now() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(::setTimeText) { Log.e(TAG, it.toString()) }
+        )
     }
 
     private fun setupDescriptionViews(meetingRoom: MeetingRoom) {
