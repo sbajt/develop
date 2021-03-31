@@ -1,11 +1,13 @@
 package com.scorealarm.meeting.rooms.list
 
+import android.R
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.scorealarm.meeting.rooms.list.viewholders.MeetingRoomViewHolder
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 
-class MeetingRoomListAdapter(private val actionListener: MeetingRoomListItemActionListener) :
+class MeetingRoomListAdapter(private val actionListener: ListItemActionListener<*>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<MeetingRoom>()
@@ -13,7 +15,7 @@ class MeetingRoomListAdapter(private val actionListener: MeetingRoomListItemActi
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
         MeetingRoomViewHolder(
             LayoutInflater.from(parent.context)
-                .inflate(android.R.layout.simple_list_item_1, parent, false), actionListener)
+                .inflate(R.layout.simple_list_item_1, parent, false), actionListener as ListItemActionListener<MeetingRoom>)
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         (holder as MeetingRoomViewHolder).bind(items[position])

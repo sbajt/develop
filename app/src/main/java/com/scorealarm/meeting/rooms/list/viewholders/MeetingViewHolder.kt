@@ -1,4 +1,4 @@
-package com.scorealarm.meeting.rooms.list
+package com.scorealarm.meeting.rooms.list.viewholders
 
 import android.view.View
 import android.widget.TextView

@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.scorealarm.meeting.rooms.R
+import com.scorealarm.meeting.rooms.list.viewholders.MeetingViewHolder
 import com.scorealarm.meeting.rooms.models.Meeting
 
 class MeetingListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

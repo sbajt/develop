@@ -1,5 +1,7 @@
 package com.scorealarm.meeting.rooms.fragments
 
+import android.content.Context
+import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -7,20 +9,23 @@ import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingListAdapter
+import com.scorealarm.meeting.rooms.models.MeetingRoom
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_list.*
-import org.joda.time.DateTime
 import java.util.concurrent.TimeUnit
 
-class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
+class MeetingListFragment(
+    private val meetingRoom: MeetingRoom
+) : Fragment(R.layout.fragment_meeting_list) {
 
     private val listAdapter = MeetingListAdapter()
     private val compositeDisposable = CompositeDisposable()
-
-    private var hasMeetingListUpdateStarted = false
+    private val wifiManager: WifiManager by lazy {
+        context?.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -29,7 +34,11 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
     override fun onStart() {
         super.onStart()
-        observeMeetingList()
+        updateMeetingList(
+            meetingRoom = meetingRoom,
+            period = 5,
+            periodUnit = TimeUnit.MINUTES
+        )
     }
 
     override fun onStop() {
@@ -37,45 +46,22 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
         compositeDisposable.dispose()
     }
 
-    private fun observeMeetingList() {
-        compositeDisposable.add(
-            (activity as MainActivity).meetingRoomSubject
-                .subscribeOn(Schedulers.newThread())
-                .map { meetingRoom ->
-                    if (!hasMeetingListUpdateStarted) {
-                        updateMeetingList(
-                            meetingRoomId = meetingRoom.id,
-                            period = 5,
-                            periodUnit = TimeUnit.MINUTES
-                        )
-                        hasMeetingListUpdateStarted = true
-                    }
-                    meetingRoom.meetingList.filter { meeting ->
-                        meeting.startDateTime.isAfter(
-                            DateTime.now().withTimeAtStartOfDay()
-                        )
-                    }
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    listAdapter.update(it)
-                })
-                { Log.e(TAG, it.toString()) }
-        )
-    }
-
     private fun updateMeetingList(
-        meetingRoomId: String,
+        meetingRoom: MeetingRoom,
         period: Long,
         periodUnit: TimeUnit
     ) {
         compositeDisposable.add(
             Observable.interval(period, periodUnit, Schedulers.newThread())
-                .flatMap { MainActivity.getMeetingRoomData(meetingRoomId) }
+                .takeWhile{ wifiManager.isWifiEnabled }
+                .flatMap { (activity as MainActivity).fetchMeetingsByMeetingRoom(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ data ->
-                    Log.d(TAG, data)
-//                    (activity as MainActivity).meetingRoomSubject.onNext(meetingRoom)
+                .subscribe({ meetings ->
+                    (activity as MainActivity).run {
+                        updateMeetingRoomWithMeetings(meetingRoom, meetings)
+                        saveMeetingRoomIntoPreference(meetingRoom)
+                        meetingRoomSubject.onNext(meetingRoom)
+                    }
                 }, { Log.e(TAG, it.toString()) })
         )
     }
@@ -84,6 +70,6 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
         private val TAG = MeetingListFragment::class.java.canonicalName
 
-        fun getInstance() = MeetingListFragment()
+        fun getInstance(meetingRoom: MeetingRoom) = MeetingListFragment(meetingRoom)
     }
 }

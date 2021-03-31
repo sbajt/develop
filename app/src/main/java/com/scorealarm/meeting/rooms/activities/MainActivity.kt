@@ -2,10 +2,8 @@ package com.scorealarm.meeting.rooms.activities
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
-import androidx.fragment.app.replace
 import androidx.startup.AppInitializer
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
@@ -15,12 +13,9 @@ import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.ReplaySubject
 import net.danlew.android.joda.JodaTimeInitializer
-import org.joda.time.DateTime
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
@@ -39,16 +34,16 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         )
         if (meetingRoom == null) {
             supportFragmentManager.commit {
-                replace<MeetingRoomListFragment>(R.id.containerLayout)
+                add(
+                    R.id.containerLayout,
+                    MeetingRoomListFragment.getInstance(),
+                    MeetingRoomListFragment::class.java.canonicalName
+                )
             }
             supportActionBar?.title = "Meeting room chooser"
         } else {
             meetingRoomSubject.onNext(meetingRoom)
-            supportFragmentManager.commit {
-                remove(MeetingRoomListFragment.getInstance())
-                replace<MeetingRoomDescriptionFragment>(R.id.meetingRoomDescriptionContainer)
-                replace<MeetingListFragment>(R.id.meetingListContainer)
-            }
+            navigateToMeetingRoom(meetingRoom)
             supportActionBar?.title = meetingRoom.name
         }
 
@@ -59,15 +54,50 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.dispose()
     }
 
+    fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) {
+        getPreferences(Context.MODE_PRIVATE)?.edit()
+            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
+            ?.apply()
+    }
+
+    fun navigateToMeetingRoom(meetingRoom: MeetingRoom) {
+        supportFragmentManager.run {
+            val meetingRoomListFragment =
+                findFragmentByTag(MeetingRoomListFragment::class.java.canonicalName)
+            meetingRoomListFragment?.run { beginTransaction().remove(this).commit() }
+            commit {
+                add(
+                    R.id.meetingRoomDescriptionContainer,
+                    MeetingRoomDescriptionFragment.getInstance(meetingRoom)
+                )
+                add(R.id.meetingListContainer, MeetingListFragment.getInstance(meetingRoom))
+            }
+        }
+        supportFragmentManager.commit {
+//            remove(MeetingRoomListFragment.getInstance())
+
+        }
+    }
+
+    fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
+        RestService.fetchMeetingRoomList()
+
+
+    fun fetchMeetingsByMeetingRoom(meetingRoomId: String): Observable<List<Meeting>> =
+        RestService.fetchMeetingList(meetingRoomId) // todo fetch real data, currently mocked data
+
+
+    fun updateMeetingRoomWithMeetings(meetingRoom: MeetingRoom, meetings: List<Meeting>) {
+        meetingRoom.meetingList.clear()
+        meetingRoom.meetingList.addAll(meetings)
+    }
+
     companion object {
 
         const val meetingRoomKey = "meetingRoom"
 
         private val TAG = MainActivity::class.java.canonicalName
 
-        fun getMeetingRoomData(meetingRoomId: String): Observable<String> =
-            RestService.getMockData()
     }
-
 
 }

@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 
-interface MeetingRoomStatApi {
+interface MeetingRoomApi {
 
     @GET("meetingRooms")
     fun getMeetingRooms(): Observable<List<MeetingRoom>>

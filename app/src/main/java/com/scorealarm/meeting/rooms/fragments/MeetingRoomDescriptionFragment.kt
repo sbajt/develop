@@ -1,12 +1,10 @@
 package com.scorealarm.meeting.rooms.fragments
 
-import android.content.Context
 import android.util.Log
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.MeetingRoom
-import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -16,27 +14,16 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeFieldType
 import java.util.concurrent.TimeUnit
 
-class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_description) {
+class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
+    Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
 
     override fun onStart() {
         super.onStart()
         runClock()
-        compositeDisposable.add(
-            Observable.just(
-                RestService.gson.fromJson(
-                    activity?.getPreferences(Context.MODE_PRIVATE)
-                        ?.getString(MainActivity.meetingRoomKey, ""), MeetingRoom::class.java
-                )
-            )
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    meetingRoomNameView?.text = it?.name
-                    setupDescriptionViews(it)
-                }, { Log.e(TAG, it.toString()) })
-        )
+        setupDescriptionViews(meetingRoom)
+        observeMeetingRoom()
 //        setupButtonViews()
     }
 
@@ -74,6 +61,7 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
     }
 
     private fun setupDescriptionViews(meetingRoom: MeetingRoom) {
+        meetingRoomNameView?.text = meetingRoom.name
         val currentMeeting =
             meetingRoom.meetingList.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
         if (currentMeeting == null) {
@@ -88,6 +76,15 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
                         "Organizer: ${currentMeeting.organizer}" + System.lineSeparator() +
                         "Attendee count: ${currentMeeting.invitesNumber}"
         }
+    }
+
+    private fun observeMeetingRoom() {
+        compositeDisposable.add(
+            (activity as MainActivity).meetingRoomSubject
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(::setupDescriptionViews) { Log.e(TAG, it.toString()) }
+        )
     }
 
     private fun setupButtonViews() {
@@ -107,12 +104,11 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
         }
     }
 
-
     companion object {
 
         private val TAG = MeetingRoomDescriptionFragment::class.java.canonicalName
 
-        fun getInstance() = MeetingRoomDescriptionFragment()
+        fun getInstance(meetingRoom: MeetingRoom) = MeetingRoomDescriptionFragment(meetingRoom)
 
     }
 
