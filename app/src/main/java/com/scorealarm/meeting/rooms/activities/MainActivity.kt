@@ -1,8 +1,8 @@
 package com.scorealarm.meeting.rooms.activities
 
 import android.content.Context
+import android.net.wifi.WifiManager
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.startup.AppInitializer
@@ -15,12 +15,14 @@ import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.ReplaySubject
 import net.danlew.android.joda.JodaTimeInitializer
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
-    val meetingRoomSubject = PublishSubject.create<MeetingRoom>()
+    val meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom>(1)
+
+    val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -35,7 +37,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         )
         if (meetingRoom == null) {
             supportFragmentManager.commit {
-                add(
+                replace(
                     R.id.containerLayout,
                     MeetingRoomListFragment.getInstance(),
                     MeetingRoomListFragment::class.java.canonicalName
@@ -44,7 +46,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             supportActionBar?.title = "Meeting room chooser"
         } else {
             meetingRoomSubject.onNext(meetingRoom)
-            navigateToMeetingRoom(meetingRoom)
+            navigateToMeetingRoomDescription(meetingRoom)
             supportActionBar?.title = meetingRoom.name
         }
 
@@ -61,37 +63,36 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             ?.apply()
     }
 
-    fun navigateToMeetingRoom(meetingRoom: MeetingRoom) {
+    fun navigateToMeetingRoomDescription(meetingRoom: MeetingRoom) {
         supportFragmentManager.run {
             val meetingRoomListFragment =
                 findFragmentByTag(MeetingRoomListFragment::class.java.canonicalName)
             meetingRoomListFragment?.run { beginTransaction().remove(this).commit() }
             commit {
-                add(
+                replace(R.id.meetingListContainer, MeetingListFragment.getInstance())
+                replace(
                     R.id.meetingRoomDescriptionContainer,
-                    MeetingRoomDescriptionFragment.getInstance(meetingRoom)
+                    MeetingRoomDescriptionFragment.getInstance()
                 )
-                add(R.id.meetingListContainer, MeetingListFragment.getInstance(meetingRoom))
             }
         }
-        supportFragmentManager.commit {
-//            remove(MeetingRoomListFragment.getInstance())
+        supportActionBar?.title = meetingRoom.name
+    }
 
+    fun showMeetingDescriptionFragment() {
+        supportFragmentManager.commit {
+            replace(
+                R.id.meetingRoomDescriptionContainer,
+                MeetingRoomDescriptionFragment.getInstance()
+            )
         }
     }
 
     fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
-        RestService.fetchMeetingRoomList()
-
+        RestService.fetchMeetingRoomList().filter { wifiManager.isWifiEnabled }
 
     fun fetchMeetingsByMeetingRoom(meetingRoomId: String): Observable<List<Meeting>> =
-        RestService.fetchMeetingList(meetingRoomId)
-
-
-    fun updateMeetingRoomWithMeetings(meetingRoom: MeetingRoom, meetings: List<Meeting>) {
-        meetingRoom.meetingList.clear()
-        meetingRoom.meetingList.addAll(meetings)
-    }
+        RestService.fetchMeetingList(meetingRoomId).filter { wifiManager.isWifiEnabled }
 
     companion object {
 

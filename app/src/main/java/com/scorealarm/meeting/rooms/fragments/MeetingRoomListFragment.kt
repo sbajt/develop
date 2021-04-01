@@ -46,9 +46,21 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
 
     override fun onClick(data: MeetingRoom) {
         (activity as? MainActivity)?.run {
-            saveMeetingRoomIntoPreference(data)
-            navigateToMeetingRoom(data)
-            meetingRoomSubject.onNext(data)
+            compositeDisposable.add(fetchMeetingsByMeetingRoom(data.id)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    meetingRoomSubject.onNext(
+                        data.copy(
+                            id = data.id,
+                            name = data.name,
+                            meetingList = it
+                        )
+                    )
+                    saveMeetingRoomIntoPreference(data)
+                    navigateToMeetingRoomDescription(data)
+                })
+                { Log.d(TAG, it.toString()) }
+            )
         }
     }
 

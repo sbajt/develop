@@ -27,7 +27,7 @@ class MeetingListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         items.size
 
     override fun getItemId(position: Int): Long =
-        items[position].id.toLong()
+        items[position].hashCode().toLong()
 
     fun update(input: List<Meeting>) {
         items.clear()

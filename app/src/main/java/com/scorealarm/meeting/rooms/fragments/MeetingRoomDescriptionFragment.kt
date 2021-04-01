@@ -11,10 +11,9 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
-import org.joda.time.DateTimeFieldType
 import java.util.concurrent.TimeUnit
 
-class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
+class MeetingRoomDescriptionFragment :
     Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
@@ -22,9 +21,7 @@ class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
     override fun onStart() {
         super.onStart()
         initClock()
-        setupDescriptionViews(meetingRoom)
         observeMeetingRoom()
-//        setupButtonViews()
     }
 
     override fun onStop() {
@@ -58,10 +55,19 @@ class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
         )
     }
 
+    private fun observeMeetingRoom() {
+        compositeDisposable.add(
+            (activity as MainActivity).meetingRoomSubject
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(::setupDescriptionViews) { Log.e(TAG, it.toString()) }
+        )
+    }
+
     private fun setupDescriptionViews(meetingRoom: MeetingRoom) {
         meetingRoomNameView?.text = meetingRoom.name
         val currentMeeting =
-            meetingRoom.meetingList.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
+            meetingRoom.meetingList?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
         if (currentMeeting == null) {
             meetingDescription1View?.text = "No meeting in progress."
             meetingDescription2View?.text = ""
@@ -76,37 +82,11 @@ class MeetingRoomDescriptionFragment(private val meetingRoom: MeetingRoom) :
         }
     }
 
-    private fun observeMeetingRoom() {
-        compositeDisposable.add(
-            (activity as MainActivity).meetingRoomSubject
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(::setupDescriptionViews) { Log.e(TAG, it.toString()) }
-        )
-    }
-
-    private fun setupButtonViews() {
-        extendButtonView?.run {
-            isEnabled = true
-            setOnClickListener {
-                Log.d(TAG, "Extend meeting clicked")
-                it.isEnabled = false
-            }
-        }
-        endNowButtonView?.run {
-            isEnabled = true
-            setOnClickListener {
-                Log.d(TAG, "End now meeting clicked")
-                it.isEnabled = false
-            }
-        }
-    }
-
     companion object {
 
         private val TAG = MeetingRoomDescriptionFragment::class.java.canonicalName
 
-        fun getInstance(meetingRoom: MeetingRoom) = MeetingRoomDescriptionFragment(meetingRoom)
+        fun getInstance() = MeetingRoomDescriptionFragment()
 
     }
 
