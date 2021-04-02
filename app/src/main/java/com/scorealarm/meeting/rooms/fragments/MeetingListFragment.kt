@@ -21,6 +21,8 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
     private val listAdapter = MeetingListAdapter()
     private val compositeDisposable = CompositeDisposable()
 
+    private var isUpdating = false
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         recyclerView.adapter = listAdapter
@@ -34,6 +36,7 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
     override fun onStop() {
         super.onStop()
         compositeDisposable.dispose()
+        isUpdating = false
     }
 
     private fun initMeetingList() {
@@ -42,32 +45,11 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ meetingRoom ->
                     if (meetingRoom.meetingList.isNullOrEmpty())
-                        compositeDisposable.add(
-                            (activity as MainActivity).fetchMeetingsByMeetingRoom(meetingRoom.id)
-                                .takeWhile { (activity as MainActivity).wifiManager.isWifiEnabled }
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe({ meetings ->
-                                    if (meetingRoom.meetingList.isNullOrEmpty()) {
-                                        (activity as MainActivity).run {
-                                            showEmptyMeetingListFragment("No meetings today")
-                                        }
-                                    }else {
-                                        listAdapter.update(meetings)
-                                        (activity as MainActivity).run {
-                                            saveMeetingRoomIntoPreference(
-                                                MeetingRoom(
-                                                    id = meetingRoom.id,
-                                                    name = meetingRoom.name,
-                                                    meetingList = meetings
-                                                )
-                                            )
-                                            updateMeetingRoomSubject(meetingRoom, meetings)
-                                            showMeetingDescriptionFragment()
-                                        }
-                                    }
-                                }) { Log.e(TAG, it.toString()) }
-                        )
-                    updateMeetingListByInterval(meetingRoom, 5, TimeUnit.MINUTES)
+                        (activity as MainActivity).showEmptyMeetingListFragment("No meetings today")
+                    else
+                        listAdapter.update(meetingRoom.meetingList)
+                    if (!isUpdating)
+                        updateMeetingListByInterval(meetingRoom, 1, TimeUnit.MINUTES)
                 }) { Log.e(TAG, it.toString()) }
         )
     }
@@ -77,13 +59,16 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
         period: Long,
         periodUnit: TimeUnit
     ) {
+        isUpdating = true
         compositeDisposable.add(
             Observable.interval(period, periodUnit, Schedulers.newThread())
                 .takeWhile { (activity as MainActivity).wifiManager.isWifiEnabled }
                 .flatMap { (activity as MainActivity).fetchMeetingsByMeetingRoom(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    updateMeetingRoomSubject(meetingRoom, it)
+                    (activity as MainActivity).saveMeetingRoomIntoPreference(
+                        updateMeetingRoomSubject(meetingRoom, it)
+                    )
                 }) { Log.e(TAG, it.toString()) }
         )
     }
@@ -91,16 +76,14 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
     private fun updateMeetingRoomSubject(
         meetingRoom: MeetingRoom,
         meetings: List<Meeting>
-    ) {
-        (activity as MainActivity).run {
-            meetingRoomSubject.onNext(
-                meetingRoom.copy(
-                    id = meetingRoom.id,
-                    name = meetingRoom.name,
-                    meetingList = meetings
-                )
-            )
-        }
+    ): MeetingRoom {
+        val room = meetingRoom.copy(
+            id = meetingRoom.id,
+            name = meetingRoom.name,
+            meetingList = meetings
+        )
+        (activity as MainActivity).meetingRoomSubject.onNext(room)
+        return room
     }
 
     companion object {

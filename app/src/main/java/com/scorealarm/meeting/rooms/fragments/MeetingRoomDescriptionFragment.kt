@@ -65,7 +65,6 @@ class MeetingRoomDescriptionFragment :
     }
 
     private fun setupDescriptionViews(meetingRoom: MeetingRoom) {
-        meetingRoomNameView?.text = meetingRoom.name
         if (meetingRoom.meetingList?.isNullOrEmpty() == true) {
             meetingDescription1View?.text = "No meetings scheduled today"
             meetingDescription2View?.text = ""
