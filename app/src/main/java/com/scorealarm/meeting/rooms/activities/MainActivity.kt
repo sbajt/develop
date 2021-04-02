@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.startup.AppInitializer
 import com.scorealarm.meeting.rooms.R
+import com.scorealarm.meeting.rooms.fragments.EmptyMeetingsFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
@@ -47,7 +48,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         } else {
             meetingRoomSubject.onNext(meetingRoom)
             navigateToMeetingRoomDescription(meetingRoom)
-            supportActionBar?.title = meetingRoom.name
+            supportActionBar.run {
+                title = meetingRoom.name
+            }
         }
 
     }
@@ -84,6 +87,15 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             replace(
                 R.id.meetingRoomDescriptionContainer,
                 MeetingRoomDescriptionFragment.getInstance()
+            )
+        }
+    }
+
+    fun showEmptyMeetingListFragment(text: String) {
+        supportFragmentManager.commit {
+            replace(
+                R.id.meetingListContainer,
+                EmptyMeetingsFragment.getInstance(text)
             )
         }
     }

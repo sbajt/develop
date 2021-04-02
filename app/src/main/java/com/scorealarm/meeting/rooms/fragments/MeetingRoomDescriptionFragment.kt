@@ -66,19 +66,24 @@ class MeetingRoomDescriptionFragment :
 
     private fun setupDescriptionViews(meetingRoom: MeetingRoom) {
         meetingRoomNameView?.text = meetingRoom.name
-        val currentMeeting =
-            meetingRoom.meetingList?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
-        if (currentMeeting == null) {
-            meetingDescription1View?.text = "No meeting in progress."
+        if (meetingRoom.meetingList?.isNullOrEmpty() == true) {
+            meetingDescription1View?.text = "No meetings scheduled today"
             meetingDescription2View?.text = ""
         } else {
-            meetingDescription1View?.text = "${currentMeeting.title}"
-            meetingDescription2View?.text =
-                currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
-                    "HH:mm"
-                ) + System.lineSeparator() +
-                        "Organizer: ${currentMeeting.organizer}" + System.lineSeparator() +
-                        "Attendee count: ${currentMeeting.invitesNumber}"
+            val currentMeeting =
+                meetingRoom.meetingList.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
+            if (currentMeeting == null) {
+                meetingDescription1View?.text = "No meeting in progress"
+                meetingDescription2View?.text = ""
+            } else {
+                meetingDescription1View?.text = "${currentMeeting.title}"
+                meetingDescription2View?.text =
+                    currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
+                        "HH:mm"
+                    ) + System.lineSeparator() +
+                            "Organizer: ${currentMeeting.organizer}" + System.lineSeparator() +
+                            "Attendee count: ${currentMeeting.invitesNumber}"
+            }
         }
     }
 

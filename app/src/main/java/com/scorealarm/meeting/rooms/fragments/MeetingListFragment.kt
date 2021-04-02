@@ -47,7 +47,12 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                                 .takeWhile { (activity as MainActivity).wifiManager.isWifiEnabled }
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe({ meetings ->
-                                    if (meetingRoom.meetingList == null) {
+                                    if (meetingRoom.meetingList.isNullOrEmpty()) {
+                                        (activity as MainActivity).run {
+                                            showEmptyMeetingListFragment("No meetings today")
+                                        }
+                                    }else {
+                                        listAdapter.update(meetings)
                                         (activity as MainActivity).run {
                                             saveMeetingRoomIntoPreference(
                                                 MeetingRoom(
@@ -56,10 +61,10 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                                                     meetingList = meetings
                                                 )
                                             )
+                                            updateMeetingRoomSubject(meetingRoom, meetings)
                                             showMeetingDescriptionFragment()
                                         }
                                     }
-                                    listAdapter.update(meetings)
                                 }) { Log.e(TAG, it.toString()) }
                         )
                     updateMeetingListByInterval(meetingRoom, 5, TimeUnit.MINUTES)
