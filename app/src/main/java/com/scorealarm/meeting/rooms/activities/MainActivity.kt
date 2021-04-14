@@ -3,19 +3,26 @@ package com.scorealarm.meeting.rooms.activities
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.startup.AppInitializer
+import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.EmptyListSourceType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.EmptyListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDetailsFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
+import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.ReplaySubject
 import net.danlew.android.joda.JodaTimeInitializer
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
@@ -45,6 +52,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         } else {
             meetingRoomSubject.onNext(meetingRoom)
             navigateToMeetingRoomDetails(meetingRoom)
+            updateListByInterval(meetingRoom, Config.DATA_REFRESH_RATE_SECONDS, TimeUnit.SECONDS)
         }
     }
 
@@ -91,8 +99,42 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .commit()
     }
 
+    private fun updateListByInterval(
+        meetingRoom: MeetingRoom,
+        period: Long,
+        periodUnit: TimeUnit
+    ) {
+        compositeDisposable.add(
+            Observable.interval(period, periodUnit, Schedulers.newThread())
+                .filter { wifiManager.isWifiEnabled }
+                .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    updateMeetingRoomWithMeetings(meetingRoom, it)
+                }) { Log.e(TAG, it.toString()) }
+        )
+    }
+
+    private fun updateMeetingRoomWithMeetings(meetingRoom: MeetingRoom, meetings: List<Meeting>) {
+        this.run {
+            saveMeetingRoomIntoPreference(
+                meetingRoom.copy(
+                    id = meetingRoom.id,
+                    name = meetingRoom.name,
+                    meetingList = meetings
+                )
+            )
+            meetingRoomSubject.onNext(
+                meetingRoom.copy(
+                    id = meetingRoom.id,
+                    name = meetingRoom.name,
+                    meetingList = meetings
+                )
+            )
+        }
+    }
+
     private fun navigateToMeetingRoomList() {
-//        meetingRoomListContainer.visibility = View.VISIBLE
         supportFragmentManager.beginTransaction()
             .add(
                 R.id.meetingRoomListContainer,

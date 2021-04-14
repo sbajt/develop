@@ -47,44 +47,8 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                     } else {
                         listAdapter.update(meetingListToday)
                     }
-                    updateListByInterval(it, 5, TimeUnit.MINUTES)
                 }, { Log.d(TAG, it.toString()) })
         )
-    }
-
-    private fun updateListByInterval(
-        meetingRoom: MeetingRoom,
-        period: Long,
-        periodUnit: TimeUnit
-    ) {
-        compositeDisposable.add(
-            Observable.interval(period, periodUnit, Schedulers.newThread())
-                .filter { (activity as MainActivity).wifiManager.isWifiEnabled }
-                .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    updateMeetingRoomWithMeetings(meetingRoom, it)
-                }) { Log.e(TAG, it.toString()) }
-        )
-    }
-
-    private fun updateMeetingRoomWithMeetings(meetingRoom: MeetingRoom, meetings: List<Meeting>) {
-        (activity as MainActivity).run {
-            saveMeetingRoomIntoPreference(
-                meetingRoom.copy(
-                    id = meetingRoom.id,
-                    name = meetingRoom.name,
-                    meetingList = meetings
-                )
-            )
-            meetingRoomSubject.onNext(
-                meetingRoom.copy(
-                    id = meetingRoom.id,
-                    name = meetingRoom.name,
-                    meetingList = meetings
-                )
-            )
-        }
     }
 
     companion object {

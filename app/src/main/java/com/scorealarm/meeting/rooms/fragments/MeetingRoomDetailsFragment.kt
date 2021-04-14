@@ -2,6 +2,7 @@ package com.scorealarm.meeting.rooms.fragments
 
 import android.util.Log
 import androidx.fragment.app.Fragment
+import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.Meeting
@@ -30,20 +31,28 @@ class MeetingRoomDetailsFragment :
     }
 
     private fun initViews() {
-        setTimeText(DateTime.now())
+        timeView?.text = DateTime.now().toString("HH:mm")
         runClock()
-    }
-
-    private fun setTimeText(dateTime: DateTime) {
-        timeView?.text = dateTime.toString("HH:mm")
     }
 
     private fun runClock() {
         compositeDisposable.add(
-            Observable.interval(1, TimeUnit.MINUTES, Schedulers.newThread())
+            Observable.interval(
+                1,
+                if (Config.ANIMATE_CLOCK) TimeUnit.SECONDS else TimeUnit.MINUTES,
+                Schedulers.newThread()
+            )
                 .map { DateTime.now() }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(::setTimeText) { Log.e(TAG, it.toString()) }
+                .subscribe({
+                    if (Config.ANIMATE_CLOCK) {
+                        if (it.secondOfMinute % 2 == 0)
+                            timeView?.text = it.toString("HH mm")
+                        else
+                            timeView?.text = it.toString("HH:mm")
+                    } else
+                        timeView?.text = it.toString("HH:mm")
+                }) { Log.e(TAG, it.toString()) }
         )
     }
 
