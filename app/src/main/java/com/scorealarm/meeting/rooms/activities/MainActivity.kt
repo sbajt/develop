@@ -3,20 +3,21 @@ package com.scorealarm.meeting.rooms.activities
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.startup.AppInitializer
+import com.scorealarm.meeting.rooms.EmptyListSourceType
 import com.scorealarm.meeting.rooms.R
-import com.scorealarm.meeting.rooms.fragments.EmptyMeetingsFragment
+import com.scorealarm.meeting.rooms.fragments.EmptyListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
-import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
+import com.scorealarm.meeting.rooms.fragments.MeetingRoomDetailsFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
-import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
-import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.ReplaySubject
+import kotlinx.android.synthetic.main.activity_main.*
 import net.danlew.android.joda.JodaTimeInitializer
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
@@ -32,27 +33,21 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         AppInitializer.getInstance(this).initializeComponent(JodaTimeInitializer::class.java)
 
+    }
+
+    override fun onStart() {
+        super.onStart()
+
         val meetingRoom = RestService.gson.fromJson(
             getPreferences(Context.MODE_PRIVATE).getString(meetingRoomKey, ""),
             MeetingRoom::class.java
         )
         if (meetingRoom == null) {
-            supportFragmentManager.commit {
-                replace(
-                    R.id.containerLayout,
-                    MeetingRoomListFragment.getInstance(),
-                    MeetingRoomListFragment::class.java.canonicalName
-                )
-            }
-            supportActionBar?.title = "Meeting room chooser"
+            navigateToMeetingRoomList()
         } else {
             meetingRoomSubject.onNext(meetingRoom)
-            navigateToMeetingRoomDescription(meetingRoom)
-            supportActionBar.run {
-                title = meetingRoom.name
-            }
+            navigateToMeetingRoomDetails(meetingRoom)
         }
-
     }
 
     override fun onDestroy() {
@@ -66,45 +61,39 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             ?.apply()
     }
 
-    fun navigateToMeetingRoomDescription(meetingRoom: MeetingRoom) {
-        supportFragmentManager.run {
-            val meetingRoomListFragment =
-                findFragmentByTag(MeetingRoomListFragment::class.java.canonicalName)
-            meetingRoomListFragment?.run { beginTransaction().remove(this).commit() }
-            commit {
-                replace(R.id.meetingListContainer, MeetingListFragment.getInstance())
-                replace(
-                    R.id.meetingRoomDescriptionContainer,
-                    MeetingRoomDescriptionFragment.getInstance()
-                )
+    fun navigateToMeetingRoomDetails(meetingRoom: MeetingRoom) {
+        supportActionBar?.title = meetingRoom.name
+        supportFragmentManager.commit {
+            remove(MeetingRoomListFragment.getInstance())
+            replace(R.id.meetingRoomDetailsContainer, MeetingRoomDetailsFragment.getInstance())
+            replace(R.id.meetingRoomMeetingListContainer, MeetingListFragment.getInstance())
+        }
+    }
+
+    fun navigateToEmptyFragment(type: EmptyListSourceType) {
+        var text = ""
+        var layoutRes = 0
+        when (type) {
+            EmptyListSourceType.MEETING_ROOM_LIST -> {
+                text = "No meeting rooms"
+                layoutRes = R.id.containerLayout
+            }
+            EmptyListSourceType.MEETING_LIST -> {
+                text = "No meetings today"
+                layoutRes = R.id.meetingRoomMeetingListContainer
             }
         }
-        supportActionBar?.title = meetingRoom.name
-    }
-
-    fun showMeetingDescriptionFragment() {
         supportFragmentManager.commit {
-            replace(
-                R.id.meetingRoomDescriptionContainer,
-                MeetingRoomDescriptionFragment.getInstance()
-            )
+            replace(layoutRes, EmptyListFragment.getInstance(text))
         }
     }
 
-    fun showEmptyMeetingListFragment(text: String) {
+    private fun navigateToMeetingRoomList() {
         supportFragmentManager.commit {
-            replace(
-                R.id.meetingListContainer,
-                EmptyMeetingsFragment.getInstance(text)
-            )
+            replace(R.id.containerLayout, MeetingRoomListFragment.getInstance())
         }
+        supportActionBar?.title = "Meeting room chooser"
     }
-
-    fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
-        RestService.fetchMeetingRoomList().filter { wifiManager.isWifiEnabled }
-
-    fun fetchMeetingsByMeetingRoom(meetingRoomId: String): Observable<List<Meeting>> =
-        RestService.fetchMeetingList(meetingRoomId).filter { wifiManager.isWifiEnabled }
 
     companion object {
 

@@ -1,14 +1,13 @@
 package com.scorealarm.meeting.rooms.fragments
 
-import android.os.Bundle
 import android.util.Log
-import android.view.View
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.ListItemActionListener
 import com.scorealarm.meeting.rooms.list.MeetingRoomListAdapter
 import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.fragment_meeting_room_list.*
@@ -19,19 +18,17 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
     private val listAdapter = MeetingRoomListAdapter(this)
     private val compositeDisposable = CompositeDisposable()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        recyclerView.adapter = listAdapter
-    }
-
     override fun onStart() {
         super.onStart()
+        recyclerView?.adapter = listAdapter
         compositeDisposable.add(
-            (activity as MainActivity).fetchMeetingRoomList()
+            RestService.fetchMeetingRoomList()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(listAdapter::update) { Log.d(TAG, it.toString()) }
+                .subscribe({
+                    Log.d(TAG, it.toString())
+                    listAdapter.update(it)
+                }) { Log.d(TAG, it.toString()) }
         )
-
     }
 
     override fun onStop() {
@@ -39,31 +36,23 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
         compositeDisposable.dispose()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        compositeDisposable.dispose()
-    }
-
     override fun onClick(data: MeetingRoom) {
-        (activity as? MainActivity)?.run {
-            compositeDisposable.add(fetchMeetingsByMeetingRoom(data.id)
-                .observeOn(AndroidSchedulers.mainThread())
+        compositeDisposable.add(
+            RestService.fetchMeetingList(data.id)
                 .subscribe({
-                    meetingRoomSubject.onNext(
-                        data.copy(
+                    (activity as MainActivity).run {
+                        val newMeetingRoom = MeetingRoom(
                             id = data.id,
                             name = data.name,
                             meetingList = it
                         )
-                    )
-                    saveMeetingRoomIntoPreference(data)
-                    navigateToMeetingRoomDescription(data)
-                })
-                { Log.d(TAG, it.toString()) }
-            )
-        }
+                        saveMeetingRoomIntoPreference(data)
+                        meetingRoomSubject.onNext(newMeetingRoom)
+                        navigateToMeetingRoomDetails(data)
+                    }
+                }, { Log.e(TAG, it.toString()) })
+        )
     }
-
 
     companion object {
 

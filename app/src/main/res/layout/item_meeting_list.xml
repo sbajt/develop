@@ -2,50 +2,64 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="42dp">
+    android:layout_height="72dp">
 
     <TextView
-        android:id="@+id/titleView"
+        android:id="@+id/timeView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:lines="1"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        tools:text="Meeting" />
-
-    <TextView
-        android:id="@+id/subtitleView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/titleView"
-        android:layout_gravity="bottom"
-        android:layout_marginStart="8dp"
-        android:lines="1"
-        android:textSize="10sp"
+        android:layout_above="@id/meetingNameView"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="16sp"
         android:textStyle="italic"
         tools:text="10:00 - 11:00" />
 
+    <TextView
+        android:id="@+id/meetingNameView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:text="Meeting name" />
+
+    <TextView
+        android:id="@+id/meetingOrganizerView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/meetingNameView"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@id/attendeeCountIconView"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="14sp"
+        android:textStyle="italic"
+        tools:text="marijan.martinovic@superology.com" />
+
     <ImageView
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="16dp"
-        android:src="@android:drawable/ic_menu_my_calendar" />
+        android:id="@+id/attendeeCountIconView"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_toStartOf="@id/attendeeCountView"
+        android:src="@drawable/ic_meeting" />
 
     <TextView
         android:id="@+id/attendeeCountView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="12dp"
+        android:ellipsize="end"
         android:gravity="bottom"
-        android:lines="1"
-        android:textSize="10sp"
-        tools:text="10" />
+        android:maxLines="1"
+        android:textSize="14sp"
+        tools:text="" />
 </RelativeLayout>
