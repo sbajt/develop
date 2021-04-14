@@ -2,7 +2,6 @@ package com.scorealarm.meeting.rooms.fragments
 
 import android.util.Log
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DividerItemDecoration
 import com.scorealarm.meeting.rooms.EmptyListSourceType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
@@ -15,8 +14,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_list.*
-import kotlinx.android.synthetic.main.fragment_meeting_list.recyclerView
-import kotlinx.android.synthetic.main.fragment_meeting_room_list.*
+import org.joda.time.DateTime
 import java.util.concurrent.TimeUnit
 
 class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
@@ -41,12 +39,15 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (it.meetingList.isNullOrEmpty()) {
+                    val meetingListToday = it.meetingList?.filter { meeting ->
+                        meeting.endDateTime.dayOfMonth() == DateTime.now().dayOfMonth()
+                    }
+                    if (meetingListToday.isNullOrEmpty()) {
                         (activity as MainActivity).navigateToEmptyFragment(EmptyListSourceType.MEETING_LIST)
                     } else {
-                        listAdapter.update(it.meetingList)
+                        listAdapter.update(meetingListToday)
                     }
-                    updateListByInterval(it, 1, TimeUnit.MINUTES)
+                    updateListByInterval(it, 5, TimeUnit.MINUTES)
                 }, { Log.d(TAG, it.toString()) })
         )
     }
@@ -62,7 +63,7 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    updateMeetingRoomWithMeetings(meetingRoom,it)
+                    updateMeetingRoomWithMeetings(meetingRoom, it)
                 }) { Log.e(TAG, it.toString()) }
         )
     }

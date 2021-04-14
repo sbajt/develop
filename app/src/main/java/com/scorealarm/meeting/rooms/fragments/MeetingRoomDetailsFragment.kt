@@ -58,24 +58,32 @@ class MeetingRoomDetailsFragment :
     }
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
-        val currentMeeting =
-            meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
-        if (currentMeeting == null) {
-            currentMeetingNameView?.run {
-                text = "No meeting in progress"
-                textSize = 16f
-            }
+        if (meetings?.filter { it.endDateTime.dayOfMonth() == DateTime.now().dayOfMonth() }
+                .isNullOrEmpty()) {
+            currentMeetingNameView?.text = ""
             currentMeetingTimeView?.text = ""
             currentMeetingOrganizerView?.text = ""
         } else {
-            currentMeetingTimeView?.text =
-                currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
-                    "HH:mm"
-                )
-            currentMeetingNameView?.text = "${currentMeeting.title}"
-            currentMeetingOrganizerView?.text = "${currentMeeting.organizer}"
+            val currentMeeting =
+                meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
+            if (currentMeeting == null) {
+                currentMeetingNameView?.run {
+                    text = "No meeting in progress"
+                    textSize = 16f
+                }
+                currentMeetingTimeView?.text = ""
+                currentMeetingOrganizerView?.text = ""
+            } else {
+                currentMeetingTimeView?.text =
+                    currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
+                        "HH:mm"
+                    )
+                currentMeetingNameView?.text = "${currentMeeting.title}"
+                currentMeetingOrganizerView?.text = "${currentMeeting.organizer}"
+            }
         }
     }
+
 
     companion object {
 

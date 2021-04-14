@@ -24,10 +24,7 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
         compositeDisposable.add(
             RestService.fetchMeetingRoomList()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Log.d(TAG, it.toString())
-                    listAdapter.update(it)
-                }) { Log.d(TAG, it.toString()) }
+                .subscribe(listAdapter::update) { Log.d(TAG, it.toString()) }
         )
     }
 
@@ -39,6 +36,7 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
     override fun onClick(data: MeetingRoom) {
         compositeDisposable.add(
             RestService.fetchMeetingList(data.id)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     (activity as MainActivity).run {
                         val newMeetingRoom = MeetingRoom(
@@ -46,9 +44,9 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
                             name = data.name,
                             meetingList = it
                         )
-                        saveMeetingRoomIntoPreference(data)
+                        saveMeetingRoomIntoPreference(newMeetingRoom)
                         meetingRoomSubject.onNext(newMeetingRoom)
-                        navigateToMeetingRoomDetails(data)
+                        navigateToMeetingRoomDetails(newMeetingRoom)
                     }
                 }, { Log.e(TAG, it.toString()) })
         )
