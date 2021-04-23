@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.startup.AppInitializer
 import com.scorealarm.meeting.rooms.Config
-import com.scorealarm.meeting.rooms.EmptyListSourceType
+import com.scorealarm.meeting.rooms.ListDisplayType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.EmptyListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         } else {
             meetingRoomSubject.onNext(meetingRoom)
             navigateToMeetingRoomDetails(meetingRoom)
-            updateListByInterval(meetingRoom, Config.DATA_REFRESH_RATE_SECONDS, TimeUnit.SECONDS)
+            updateListByInterval(meetingRoom, Config.DATA_REFRESH_RATE_IN_SECONDS, TimeUnit.SECONDS)
         }
     }
 
@@ -68,7 +68,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 
     fun navigateToMeetingRoomDetails(meetingRoom: MeetingRoom) {
-//        meetingRoomListContainer.visibility = View.GONE
         val meetingRoomListFragment =
             supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
         if (meetingRoomListFragment != null) {
@@ -81,15 +80,15 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         supportActionBar?.title = meetingRoom.name
     }
 
-    fun navigateToEmptyFragment(type: EmptyListSourceType) {
+    fun navigateToEmptyFragment(type: ListDisplayType) {
         var text = ""
         var layoutRes = 0
         when (type) {
-            EmptyListSourceType.MEETING_ROOM_LIST -> {
+            ListDisplayType.MEETING_ROOM_LIST -> {
                 text = "No meeting rooms"
                 layoutRes = R.id.meetingRoomListContainer
             }
-            EmptyListSourceType.MEETING_LIST -> {
+            ListDisplayType.MEETING_LIST -> {
                 text = "No meetings today"
                 layoutRes = R.id.meetingRoomMeetingListContainer
             }

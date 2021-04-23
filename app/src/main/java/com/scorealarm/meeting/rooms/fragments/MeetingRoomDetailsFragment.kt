@@ -67,9 +67,12 @@ class MeetingRoomDetailsFragment :
     }
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
-        if (meetings?.filter { it.endDateTime.dayOfMonth() == DateTime.now().dayOfMonth() }
+        if (meetings?.filter { it.startDateTime.dayOfMonth() == DateTime.now().dayOfMonth() }
                 .isNullOrEmpty()) {
-            currentMeetingNameView?.text = ""
+            currentMeetingNameView?.run {
+                text = ""
+                textSize = 24f
+            }
             currentMeetingTimeView?.text = ""
             currentMeetingOrganizerView?.text = ""
         } else {
