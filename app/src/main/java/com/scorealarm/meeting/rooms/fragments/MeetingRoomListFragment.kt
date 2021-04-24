@@ -34,22 +34,9 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
     }
 
     override fun onClick(data: MeetingRoom) {
-        compositeDisposable.add(
-            RestService.fetchMeetingList(data.id)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    (activity as MainActivity).run {
-                        val newMeetingRoom = MeetingRoom(
-                            id = data.id,
-                            name = data.name,
-                            meetingList = it
-                        )
-                        saveMeetingRoomIntoPreference(newMeetingRoom)
-                        meetingRoomSubject.onNext(newMeetingRoom)
-                        navigateToMeetingRoomDetails(newMeetingRoom)
-                    }
-                }, { Log.e(TAG, it.toString()) })
-        )
+        (activity as MainActivity).run {
+            fetchMeetingsForMeetingRoom(data)
+        }
     }
 
     companion object {

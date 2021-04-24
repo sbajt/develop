@@ -11,7 +11,7 @@ import com.scorealarm.meeting.rooms.ListDisplayType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.EmptyListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
-import com.scorealarm.meeting.rooms.fragments.MeetingRoomDetailsFragment
+import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
@@ -50,8 +50,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         if (meetingRoom == null) {
             navigateToMeetingRoomList()
         } else {
-            meetingRoomSubject.onNext(meetingRoom)
-            navigateToMeetingRoomDetails(meetingRoom)
+            fetchMeetingsForMeetingRoom(meetingRoom)
             updateListByInterval(meetingRoom, Config.DATA_REFRESH_RATE_IN_SECONDS, TimeUnit.SECONDS)
         }
     }
@@ -59,25 +58,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.dispose()
-    }
-
-    fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) {
-        getPreferences(Context.MODE_PRIVATE)?.edit()
-            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
-            ?.apply()
-    }
-
-    fun navigateToMeetingRoomDetails(meetingRoom: MeetingRoom) {
-        val meetingRoomListFragment =
-            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
-        if (meetingRoomListFragment != null) {
-            supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
-        }
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDetailsFragment.getInstance())
-            .replace(R.id.meetingRoomMeetingListContainer, MeetingListFragment.getInstance())
-            .commit()
-        supportActionBar?.title = meetingRoom.name
     }
 
     fun navigateToEmptyFragment(type: ListDisplayType) {
@@ -98,6 +78,50 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .commit()
     }
 
+    fun fetchMeetingsForMeetingRoom(meetingRoom: MeetingRoom) {
+        compositeDisposable.add(
+            RestService.fetchMeetingList(meetingRoom.id)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                    meetingRoomSubject.onNext(newMeetingRoomObject)
+                    navigateToMeetingRoomDetails(newMeetingRoomObject)
+                }, { Log.e(TAG, it.toString()) })
+        )
+    }
+
+    private fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) {
+        getPreferences(Context.MODE_PRIVATE)?.edit()
+            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
+            ?.apply()
+    }
+
+    private fun navigateToMeetingRoomDetails(meetingRoom: MeetingRoom) {
+        val meetingRoomListFragment =
+            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
+        if (meetingRoomListFragment != null) {
+            supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
+        }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDescriptionFragment.getInstance())
+            .replace(R.id.meetingRoomMeetingListContainer, MeetingListFragment.getInstance())
+            .commit()
+        supportActionBar?.title = meetingRoom.name
+    }
+
+    private fun updateMeetingRoomWithMeetings(
+        meetingRoom: MeetingRoom,
+        meetings: List<Meeting>
+    ): MeetingRoom =
+        this.run {
+            MeetingRoom(
+                id = meetingRoom.id,
+                name = meetingRoom.name,
+                meetingList = meetings
+            )
+        }
+
     private fun updateListByInterval(
         meetingRoom: MeetingRoom,
         period: Long,
@@ -109,28 +133,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    updateMeetingRoomWithMeetings(meetingRoom, it)
+                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                    meetingRoomSubject.onNext(newMeetingRoomObject)
                 }) { Log.e(TAG, it.toString()) }
         )
-    }
-
-    private fun updateMeetingRoomWithMeetings(meetingRoom: MeetingRoom, meetings: List<Meeting>) {
-        this.run {
-            saveMeetingRoomIntoPreference(
-                meetingRoom.copy(
-                    id = meetingRoom.id,
-                    name = meetingRoom.name,
-                    meetingList = meetings
-                )
-            )
-            meetingRoomSubject.onNext(
-                meetingRoom.copy(
-                    id = meetingRoom.id,
-                    name = meetingRoom.name,
-                    meetingList = meetings
-                )
-            )
-        }
     }
 
     private fun navigateToMeetingRoomList() {

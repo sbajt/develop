@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
 import java.util.concurrent.TimeUnit
 
-class MeetingRoomDetailsFragment :
+class MeetingRoomDescriptionFragment :
     Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
@@ -38,20 +38,14 @@ class MeetingRoomDetailsFragment :
     private fun runClock() {
         compositeDisposable.add(
             Observable.interval(
-                1,
-                if (Config.ANIMATE_CLOCK) TimeUnit.SECONDS else TimeUnit.MINUTES,
+                Config.ANIMATE_CLOCK_PERIOD,
+                Config.ANIMATE_CLOCK_TIME_UNIT,
                 Schedulers.newThread()
             )
                 .map { DateTime.now() }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (Config.ANIMATE_CLOCK) {
-                        if (it.secondOfMinute % 2 == 0)
-                            timeView?.text = it.toString("HH mm")
-                        else
-                            timeView?.text = it.toString("HH:mm")
-                    } else
-                        timeView?.text = it.toString("HH:mm")
+                    timeView?.text = it.toString("HH:mm")
                 }) { Log.e(TAG, it.toString()) }
         )
     }
@@ -67,7 +61,10 @@ class MeetingRoomDetailsFragment :
     }
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
-        if (meetings?.filter { it.startDateTime.dayOfMonth() == DateTime.now().dayOfMonth() }
+        if (meetings?.filter {
+                it.startDateTime.dayOfMonth() == DateTime.now()
+                    .dayOfMonth() && it.endDateTime.dayOfMonth() == DateTime.now().dayOfMonth()
+            }
                 .isNullOrEmpty()) {
             currentMeetingNameView?.run {
                 text = ""
@@ -76,32 +73,39 @@ class MeetingRoomDetailsFragment :
             currentMeetingTimeView?.text = ""
             currentMeetingOrganizerView?.text = ""
         } else {
-            val currentMeeting =
-                meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
-            if (currentMeeting == null) {
-                currentMeetingNameView?.run {
-                    text = "No meeting in progress"
-                    textSize = 16f
-                }
-                currentMeetingTimeView?.text = ""
-                currentMeetingOrganizerView?.text = ""
-            } else {
-                currentMeetingTimeView?.text =
-                    currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
-                        "HH:mm"
-                    )
-                currentMeetingNameView?.text = "${currentMeeting.title}"
-                currentMeetingOrganizerView?.text = "${currentMeeting.organizer}"
-            }
+            compositeDisposable.add(Observable.interval(1, TimeUnit.SECONDS, Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    val currentMeeting =
+                        meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
+                    if (currentMeeting == null) {
+                        currentMeetingNameView?.run {
+                            text = "No meeting in progress"
+                            textSize = 16f
+                        }
+                        currentMeetingTimeView?.text = ""
+                        currentMeetingOrganizerView?.text = ""
+                        invitesCountView?.text = ""
+                    } else {
+                        currentMeetingTimeView?.text =
+                            currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
+                                "HH:mm"
+                            )
+                        currentMeetingNameView?.text = "${currentMeeting.title}"
+                        currentMeetingOrganizerView?.text = "${currentMeeting.organizer}"
+                        invitesCountView?.text = "Invites: ${currentMeeting.invitesNumber}"
+                    }
+                }) { Log.d(TAG, it.toString()) }
+            )
         }
     }
 
 
     companion object {
 
-        private val TAG = MeetingRoomDetailsFragment::class.java.canonicalName
+        private val TAG = MeetingRoomDescriptionFragment::class.java.canonicalName
 
-        fun getInstance() = MeetingRoomDetailsFragment()
+        fun getInstance() = MeetingRoomDescriptionFragment()
 
     }
 

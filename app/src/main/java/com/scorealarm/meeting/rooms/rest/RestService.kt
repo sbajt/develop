@@ -47,7 +47,43 @@ object RestService {
         api.getMeetingRooms().flatMap { Observable.just(it.rooms) }.subscribeOn(Schedulers.io())
 
     fun fetchMeetingList(meetingRoomId: String): Observable<List<Meeting>> =
-        api.getMeetings(meetingRoomId).flatMap { Observable.just(it.events) }
-            .subscribeOn(Schedulers.io())
+        mockMeetingList()
+//        api.getMeetings(meetingRoomId).flatMap { Observable.just(it.events) }
+//            .subscribeOn(Schedulers.io())
+
+    private fun mockMeetingList(): Observable<List<Meeting>> =
+        Observable.just(
+            listOf(
+                Meeting(
+                    title = "Test meeting 1",
+                    organizer = "Tester",
+                    invitesNumber = 4,
+                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(11),
+                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(13)
+                ),
+                Meeting(
+                    title = "Test meeting 2",
+                    organizer = "Tester",
+                    invitesNumber = 1,
+                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14),
+                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15)
+                ),
+                Meeting(
+                    title = "Test meeting 3",
+                    organizer = "Tester",
+                    invitesNumber = 12,
+                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15),
+                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16)
+                ),
+                Meeting(
+                    title = "Test meeting 4",
+                    organizer = "Tester",
+                    invitesNumber = 3,
+                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16),
+                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(17)
+                )
+            )
+        )
+
 
 }

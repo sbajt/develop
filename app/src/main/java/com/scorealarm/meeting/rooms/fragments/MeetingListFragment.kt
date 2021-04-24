@@ -11,6 +11,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_list.*
 import org.joda.time.DateTime
+import org.joda.time.Duration
 
 class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
