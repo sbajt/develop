@@ -85,6 +85,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             R.id.removePersistedData -> {
                 removePersistedMeetingRoom()
                 navigateToMeetingRoomList()
+                invalidateOptionsMenu()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -118,6 +119,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     saveMeetingRoomIntoPreference(newMeetingRoomObject)
                     meetingRoomSubject.onNext(newMeetingRoomObject)
                     navigateToMeetingRoomDetails(newMeetingRoomObject)
+                    invalidateOptionsMenu()
                 }, { Log.e(TAG, it.toString()) })
         )
     }
