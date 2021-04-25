@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="92dp">
@@ -47,7 +48,8 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_toStartOf="@id/attendeeCountView"
-        android:src="@drawable/ic_meeting" />
+        android:src="@drawable/ic_meeting"
+        app:tint="#a0a0a0" />
 
     <TextView
         android:id="@+id/attendeeCountView"
@@ -56,10 +58,10 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="12dp"
+        android:textColor="#a0a0a0"
         android:ellipsize="end"
-        android:gravity="bottom"
+        android:gravity="center"
         android:maxLines="1"
         android:textSize="14sp"
-        tools:text="" />
+        tools:text="3" />
 </RelativeLayout>

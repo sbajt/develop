@@ -35,7 +35,7 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
 
     override fun onClick(data: MeetingRoom) {
         (activity as MainActivity).run {
-            fetchMeetingsForMeetingRoom(data)
+            onMeetingRoomSelected(data)
         }
     }
 

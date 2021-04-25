@@ -19,9 +19,12 @@ class MeetingRoomDescriptionFragment :
 
     private val compositeDisposable = CompositeDisposable()
 
+    private var currentMeeting: Meeting? = null
+
     override fun onStart() {
         super.onStart()
         initViews()
+        runClock()
         observeMeetingRoomSubject()
     }
 
@@ -32,7 +35,6 @@ class MeetingRoomDescriptionFragment :
 
     private fun initViews() {
         timeView?.text = DateTime.now().toString("HH:mm")
-        runClock()
     }
 
     private fun runClock() {
@@ -61,43 +63,40 @@ class MeetingRoomDescriptionFragment :
     }
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
-        if (meetings?.filter {
-                it.startDateTime.dayOfMonth() == DateTime.now()
-                    .dayOfMonth() && it.endDateTime.dayOfMonth() == DateTime.now().dayOfMonth()
-            }
-                .isNullOrEmpty()) {
-            currentMeetingNameView?.run {
-                text = ""
-                textSize = 24f
-            }
-            currentMeetingTimeView?.text = ""
-            currentMeetingOrganizerView?.text = ""
-        } else {
-            compositeDisposable.add(Observable.interval(1, TimeUnit.SECONDS, Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    val currentMeeting =
-                        meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow }
-                    if (currentMeeting == null) {
-                        currentMeetingNameView?.run {
-                            text = "No meeting in progress"
-                            textSize = 16f
-                        }
-                        currentMeetingTimeView?.text = ""
-                        currentMeetingOrganizerView?.text = ""
-                        invitesCountView?.text = ""
-                    } else {
-                        currentMeetingTimeView?.text =
-                            currentMeeting.startDateTime.toString("HH:mm") + " - " + currentMeeting.endDateTime.toString(
-                                "HH:mm"
-                            )
-                        currentMeetingNameView?.text = "${currentMeeting.title}"
-                        currentMeetingOrganizerView?.text = "${currentMeeting.organizer}"
-                        invitesCountView?.text = "Invites: ${currentMeeting.invitesNumber}"
-                    }
-                }) { Log.d(TAG, it.toString()) }
-            )
+        val currentMeeting = meetings?.find {
+            it.startDateTime.withTimeAtStartOfDay() == DateTime.now().withTimeAtStartOfDay()
+                    && it.endDateTime.withTimeAtStartOfDay() == DateTime.now()
+                .withTimeAtStartOfDay()
         }
+        bindViews(currentMeeting)
+        if (currentMeeting != null) {
+            periodicallyRefreshDescriptionViews(meetings)
+        }
+    }
+
+    private fun periodicallyRefreshDescriptionViews(meetings: List<Meeting>?) {
+        compositeDisposable.add(Observable.interval(
+            1,
+            TimeUnit.SECONDS,
+            Schedulers.newThread()
+        )
+            .map { meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow } }
+            .filter { it != currentMeeting }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                bindViews(it)
+                currentMeeting = it
+            }) { Log.d(TAG, it.toString()) }
+        )
+    }
+
+    private fun bindViews(meeting: Meeting?) {
+        currentMeetingNameView.text = if (meeting == null) "" else meeting.title
+        currentMeetingNameView.textSize = if (meeting == null) 16f else 24f
+        currentMeetingTimeView.text = if (meeting == null) "" else
+            "${meeting.startDateTime.toString("HH:mm")} - ${meeting.endDateTime.toString("HH:mm")}"
+        currentMeetingOrganizerView.text = if (meeting == null) "" else "${meeting.organizer}"
+        invitesCountView.text = if (meeting == null) "" else "Invites: ${meeting.invitesNumber}"
     }
 
 

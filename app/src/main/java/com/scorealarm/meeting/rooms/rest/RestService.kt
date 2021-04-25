@@ -58,29 +58,29 @@ object RestService {
                     title = "Test meeting 1",
                     organizer = "Tester",
                     invitesNumber = 4,
-                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(11),
-                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(13)
+                    startDateTime = DateTime.parse("2021-4-25T11:00:00.000+01:00"),
+                    endDateTime = DateTime.parse("2021-4-25T13:00:00.000+01:00")
                 ),
                 Meeting(
                     title = "Test meeting 2",
                     organizer = "Tester",
                     invitesNumber = 1,
-                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(14),
-                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15)
+                    startDateTime = DateTime.parse("2021-4-25T13:00:00.000+01:00"),
+                    endDateTime = DateTime.parse("2021-4-25T14:00:00.000+01:00")
                 ),
                 Meeting(
                     title = "Test meeting 3",
                     organizer = "Tester",
                     invitesNumber = 12,
-                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(15),
-                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16)
+                    startDateTime = DateTime.parse("2021-4-25T15:00:00.000+01:00"),
+                    endDateTime = DateTime.parse("2021-4-25T16:30:00.000+01:00")
                 ),
                 Meeting(
                     title = "Test meeting 4",
                     organizer = "Tester",
                     invitesNumber = 3,
-                    startDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(16),
-                    endDateTime = DateTime.now().withTimeAtStartOfDay().plusHours(17)
+                    startDateTime = DateTime.parse("2021-4-25T16:30:00.000+01:00"),
+                    endDateTime = DateTime.parse("2021-4-25T17:00:00.000+01:00")
                 )
             )
         )

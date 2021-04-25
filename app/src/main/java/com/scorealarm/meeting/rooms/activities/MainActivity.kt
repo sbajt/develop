@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.startup.AppInitializer
 import com.scorealarm.meeting.rooms.Config
@@ -22,13 +25,15 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.ReplaySubject
 import net.danlew.android.joda.JodaTimeInitializer
+import org.joda.time.DateTime
+import org.joda.time.Duration
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     val meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom>(1)
 
-    val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
+    private val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
 
     private val meetingRoomListFragmentTag = "MeetingRoomListFragment"
     private val compositeDisposable = CompositeDisposable()
@@ -37,7 +42,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         super.onCreate(savedInstanceState)
 
         AppInitializer.getInstance(this).initializeComponent(JodaTimeInitializer::class.java)
-
     }
 
     override fun onStart() {
@@ -50,14 +54,41 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         if (meetingRoom == null) {
             navigateToMeetingRoomList()
         } else {
-            fetchMeetingsForMeetingRoom(meetingRoom)
-            updateListByInterval(meetingRoom, Config.DATA_REFRESH_RATE_IN_SECONDS, TimeUnit.SECONDS)
+            refreshMeetingRoomSubjectOnDayChange(meetingRoom)
+            onMeetingRoomSelected(meetingRoom)
+            updateMeetingListInMeetingRoomByInterval(
+                meetingRoom,
+                Config.DATA_REFRESH_RATE_IN_SECONDS,
+                TimeUnit.SECONDS
+            )
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.dispose()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.remove_persisted_data, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.findItem(R.id.removePersistedData)?.isVisible = getPreferences(Context.MODE_PRIVATE).contains(meetingRoomKey)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.removePersistedData -> {
+                removePersistedMeetingRoom()
+                navigateToMeetingRoomList()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     fun navigateToEmptyFragment(type: ListDisplayType) {
@@ -78,7 +109,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .commit()
     }
 
-    fun fetchMeetingsForMeetingRoom(meetingRoom: MeetingRoom) {
+    fun onMeetingRoomSelected(meetingRoom: MeetingRoom) {
         compositeDisposable.add(
             RestService.fetchMeetingList(meetingRoom.id)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -89,6 +120,38 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     navigateToMeetingRoomDetails(newMeetingRoomObject)
                 }, { Log.e(TAG, it.toString()) })
         )
+    }
+
+    fun removePersistedMeetingRoom() {
+        getPreferences(Context.MODE_PRIVATE).edit()
+            .remove(meetingRoomKey)
+            .apply()
+
+    }
+
+    private fun navigateToMeetingRoomList() {
+        supportFragmentManager.beginTransaction()
+            .add(
+                R.id.meetingRoomListContainer,
+                MeetingRoomListFragment.getInstance(),
+                meetingRoomListFragmentTag
+            )
+            .commit()
+        supportActionBar?.title = "Meeting room chooser"
+    }
+
+    private fun refreshMeetingRoomSubjectOnDayChange(meetingRoom: MeetingRoom) {
+        compositeDisposable.add(Observable.timer(
+            Duration(
+                DateTime.now(),
+                DateTime.now().plusDays(1).withTimeAtStartOfDay()
+            ).standardSeconds, TimeUnit.SECONDS
+        )
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                meetingRoomSubject.onNext(meetingRoom)
+            }) { Log.d(TAG, it.toString()) })
     }
 
     private fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) {
@@ -122,7 +185,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             )
         }
 
-    private fun updateListByInterval(
+    private fun updateMeetingListInMeetingRoomByInterval(
         meetingRoom: MeetingRoom,
         period: Long,
         periodUnit: TimeUnit
@@ -138,17 +201,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     meetingRoomSubject.onNext(newMeetingRoomObject)
                 }) { Log.e(TAG, it.toString()) }
         )
-    }
-
-    private fun navigateToMeetingRoomList() {
-        supportFragmentManager.beginTransaction()
-            .add(
-                R.id.meetingRoomListContainer,
-                MeetingRoomListFragment.getInstance(),
-                meetingRoomListFragmentTag
-            )
-            .commit()
-        supportActionBar?.title = "Meeting room chooser"
     }
 
     companion object {
