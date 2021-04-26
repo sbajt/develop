@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         )
     }
 
-    fun removePersistedMeetingRoom() {
+    private fun removePersistedMeetingRoom() {
         getPreferences(Context.MODE_PRIVATE).edit()
             .remove(meetingRoomKey)
             .apply()

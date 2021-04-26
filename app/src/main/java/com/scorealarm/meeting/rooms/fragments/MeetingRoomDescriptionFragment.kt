@@ -64,17 +64,17 @@ class MeetingRoomDescriptionFragment :
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
         val currentMeeting = meetings?.find {
-            it.startDateTime.withTimeAtStartOfDay() == DateTime.now().withTimeAtStartOfDay()
-                    && it.endDateTime.withTimeAtStartOfDay() == DateTime.now()
-                .withTimeAtStartOfDay()
+            val millisStartOfTodayDateTime = DateTime.now().withTimeAtStartOfDay().millis
+            it.startDateTime.withTimeAtStartOfDay().millis == millisStartOfTodayDateTime
+                    && it.endDateTime.withTimeAtStartOfDay().millis == millisStartOfTodayDateTime
         }
         bindViews(currentMeeting)
         if (currentMeeting != null) {
-            periodicallyRefreshDescriptionViews(meetings)
+            periodicallyRefreshViews(meetings)
         }
     }
 
-    private fun periodicallyRefreshDescriptionViews(meetings: List<Meeting>?) {
+    private fun periodicallyRefreshViews(meetings: List<Meeting>?) {
         compositeDisposable.add(Observable.interval(
             1,
             TimeUnit.SECONDS,

@@ -23,7 +23,7 @@
         android:layout_centerVertical="true"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         tools:text="Meeting name" />
 

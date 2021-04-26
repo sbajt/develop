@@ -11,8 +11,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_list.*
 import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
-import java.util.*
 
 class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
@@ -36,10 +34,9 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val startOfTodayDateTime = DateTime.now().withTimeAtStartOfDay().toDate()
+                    val millisStartOfTodayDateTime = DateTime.now().withTimeAtStartOfDay().millis
                     val meetingListToday = it.meetingList?.filter { meeting ->
-                        meeting.startDateTime.withTimeAtStartOfDay().toDate() == startOfTodayDateTime
-                                && meeting.endDateTime.withTimeAtStartOfDay().toDate() == startOfTodayDateTime
+                        meeting.startDateTime.withTimeAtStartOfDay().millis == millisStartOfTodayDateTime
                     }
                     if (meetingListToday.isNullOrEmpty()) {
                         (activity as MainActivity).navigateToEmptyFragment(ListDisplayType.MEETING_LIST)

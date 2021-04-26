@@ -6,7 +6,7 @@
         android:id="@+id/removePersistedData"
         android:icon="@android:drawable/ic_menu_close_clear_cancel"
         android:iconTint="@android:color/white"
-        android:title="Remove persisted data"
+        android:title="Remove picked meeting room"
         app:showAsAction="always" />
 
 
