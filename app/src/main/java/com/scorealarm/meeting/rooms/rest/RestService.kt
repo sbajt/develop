@@ -55,6 +55,7 @@ object RestService {
             listOf(
                 Meeting(
                     title = "Test meeting 1",
+                    description = "This is a description. Very accurate. Much words. Such room.",
                     organizer = "Tester",
                     invitesNumber = 4,
                     startDateTime = DateTime.parse("2021-4-25T11:00:00.000+01:00"),
@@ -62,6 +63,7 @@ object RestService {
                 ),
                 Meeting(
                     title = "Test meeting 2",
+                    description = "This is a description. Very accurate. Much words. Such room.",
                     organizer = "Tester",
                     invitesNumber = 1,
                     startDateTime = DateTime.parse("2021-4-25T13:00:00.000+01:00"),
@@ -69,6 +71,7 @@ object RestService {
                 ),
                 Meeting(
                     title = "Test meeting 3",
+                    description = "This is a description. Very accurate. Much words. Such room.",
                     organizer = "Tester",
                     invitesNumber = 12,
                     startDateTime = DateTime.parse("2021-4-25T15:00:00.000+01:00"),
@@ -76,6 +79,7 @@ object RestService {
                 ),
                 Meeting(
                     title = "Test meeting 4",
+                    description = "This is a description. Very accurate. Much words. Such room.",
                     organizer = "Tester",
                     invitesNumber = 3,
                     startDateTime = DateTime.parse("2021-4-25T16:30:00.000+01:00"),

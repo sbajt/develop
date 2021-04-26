@@ -64,9 +64,7 @@ class MeetingRoomDescriptionFragment :
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
         val currentMeeting = meetings?.find {
-            val millisStartOfTodayDateTime = DateTime.now().withTimeAtStartOfDay().millis
-            it.startDateTime.withTimeAtStartOfDay().millis == millisStartOfTodayDateTime
-                    && it.endDateTime.withTimeAtStartOfDay().millis == millisStartOfTodayDateTime
+            it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow
         }
         bindViews(currentMeeting)
         if (currentMeeting != null) {
@@ -93,6 +91,7 @@ class MeetingRoomDescriptionFragment :
     private fun bindViews(meeting: Meeting?) {
         currentMeetingNameView.text = if (meeting == null) "" else meeting.title
         currentMeetingNameView.textSize = if (meeting == null) 16f else 24f
+        currentMeetingDescriptionView.text = if (meeting == null) "" else meeting.description
         currentMeetingTimeView.text = if (meeting == null) "" else
             "${meeting.startDateTime.toString("HH:mm")} - ${meeting.endDateTime.toString("HH:mm")}"
         currentMeetingOrganizerView.text = if (meeting == null) "" else "${meeting.organizer}"

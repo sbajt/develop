@@ -6,6 +6,9 @@ import org.joda.time.DateTime
 data class Meeting(
     @SerializedName("summary")
     val title: String?,
+
+    val description: String?,
+
     val organizer: String?,
 
     @SerializedName("attendees")
