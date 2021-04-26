@@ -1,9 +1,6 @@
 package com.scorealarm.meeting.rooms.fragments
 
 import android.util.Log
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.ListDisplayType
 import com.scorealarm.meeting.rooms.R
@@ -14,6 +11,8 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_list.*
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import java.util.*
 
 class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
@@ -37,9 +36,10 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val startOfTodayDateTime = DateTime.now().withTimeAtStartOfDay()
+                    val startOfTodayDateTime = DateTime.now().withTimeAtStartOfDay().toDate()
                     val meetingListToday = it.meetingList?.filter { meeting ->
-                        meeting.startDateTime.withTimeAtStartOfDay() == startOfTodayDateTime && meeting.endDateTime.withTimeAtStartOfDay() == startOfTodayDateTime
+                        meeting.startDateTime.withTimeAtStartOfDay().toDate() == startOfTodayDateTime
+                                && meeting.endDateTime.withTimeAtStartOfDay().toDate() == startOfTodayDateTime
                     }
                     if (meetingListToday.isNullOrEmpty()) {
                         (activity as MainActivity).navigateToEmptyFragment(ListDisplayType.MEETING_LIST)
