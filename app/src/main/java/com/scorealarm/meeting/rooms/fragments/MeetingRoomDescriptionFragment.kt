@@ -63,7 +63,7 @@ class MeetingRoomDescriptionFragment :
     }
 
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
-        val currentMeeting = meetings?.find {
+        val currentMeeting = meetings?.firstOrNull {
             it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow
         }
         bindViews(currentMeeting)
@@ -78,7 +78,7 @@ class MeetingRoomDescriptionFragment :
             TimeUnit.SECONDS,
             Schedulers.newThread()
         )
-            .map { meetings?.find { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow } }
+            .map { meetings?.firstOrNull { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow } }
             .filter { it != currentMeeting }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
