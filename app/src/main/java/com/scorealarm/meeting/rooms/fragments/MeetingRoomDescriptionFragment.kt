@@ -12,6 +12,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
+import org.joda.time.Period
 import java.util.concurrent.TimeUnit
 
 class MeetingRoomDescriptionFragment :
@@ -65,6 +66,7 @@ class MeetingRoomDescriptionFragment :
     private fun setupDescriptionViews(meetings: List<Meeting>?) {
         val currentMeeting = meetings?.firstOrNull {
             it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow
+                    || Period(it.startDateTime, it.endDateTime).minutes == 0
         }
         bindViews(currentMeeting)
         if (currentMeeting != null) {
@@ -78,7 +80,12 @@ class MeetingRoomDescriptionFragment :
             TimeUnit.SECONDS,
             Schedulers.newThread()
         )
-            .map { meetings?.firstOrNull { it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow } }
+            .map {
+                meetings?.firstOrNull {
+                    it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow
+                            || Period(it.startDateTime, it.endDateTime).days == 1
+                }
+            }
             .filter { it != currentMeeting }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -89,11 +96,16 @@ class MeetingRoomDescriptionFragment :
     }
 
     private fun bindViews(meeting: Meeting?) {
-        currentMeetingNameView.text = if (meeting == null) "" else meeting.title
-        currentMeetingNameView.textSize = if (meeting == null) 16f else 24f
+        currentMeetingTimeView.text = when {
+            meeting == null -> ""
+            Period(meeting.startDateTime, meeting.endDateTime).days == 1 -> "Meeting lasts all day"
+            else -> "${meeting.startDateTime.toString("HH:mm")} - ${meeting.endDateTime.toString("HH:mm")}"
+        }
+        currentMeetingNameView?.run {
+            text = if (meeting == null) "" else meeting.title
+            textSize = if (meeting == null) 16f else 24f
+        }
         currentMeetingDescriptionView.text = if (meeting == null) "" else meeting.description
-        currentMeetingTimeView.text = if (meeting == null) "" else
-            "${meeting.startDateTime.toString("HH:mm")} - ${meeting.endDateTime.toString("HH:mm")}"
         currentMeetingOrganizerView.text = if (meeting == null) "" else "${meeting.organizer}"
         invitesCountView.text = if (meeting == null) "" else "Invites: ${meeting.invitesNumber}"
     }
