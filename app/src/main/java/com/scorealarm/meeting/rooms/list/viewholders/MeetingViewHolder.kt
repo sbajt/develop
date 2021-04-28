@@ -12,7 +12,6 @@ class MeetingViewHolder(
 ) : RecyclerView.ViewHolder(containerView),
     LayoutContainer {
 
-
     fun bind(meeting: Meeting) {
         meeting.run {
             timeView?.text = if (Period(

@@ -52,15 +52,21 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             MeetingRoom::class.java
         )
         if (meetingRoom == null) {
-            navigateToMeetingRoomList()
+            showMeetingRoomListFragment()
         } else {
             refreshMeetingRoomSubjectOnDayChange(meetingRoom)
-            onMeetingRoomSelected(meetingRoom)
-            updateMeetingListInMeetingRoomByInterval(
+            updateMeetingListInMeetingRoomByPeriod(
                 meetingRoom,
                 Config.DATA_REFRESH_RATE_IN_SECONDS,
                 TimeUnit.SECONDS
             )
+            if (meetingRoom.meetingList.isNullOrEmpty()) {
+                showEmptyFragment(ListDisplayType.MEETING_LIST)
+                showMeetingRoomDescriptionFragment(meetingRoom)
+            } else
+                onSelectMeetingRoom(meetingRoom)
+
+            invalidateOptionsMenu()
         }
     }
 
@@ -69,14 +75,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.dispose()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        val inflater: MenuInflater = menuInflater
-        inflater.inflate(R.menu.remove_persisted_data, menu)
-        return true
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu?.findItem(R.id.removePersistedData)?.isVisible = getPreferences(Context.MODE_PRIVATE).contains(meetingRoomKey)
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(R.id.removePersistedData)?.isVisible =
+            getPreferences(Context.MODE_PRIVATE).contains(meetingRoomKey)
         return true
     }
 
@@ -84,7 +85,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         return when (item.itemId) {
             R.id.removePersistedData -> {
                 removePersistedMeetingRoom()
-                navigateToMeetingRoomList()
+                showMeetingRoomListFragment()
                 invalidateOptionsMenu()
                 true
             }
@@ -92,7 +93,26 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
     }
 
-    fun navigateToEmptyFragment(type: ListDisplayType) {
+    fun onSelectMeetingRoom(meetingRoom: MeetingRoom) {
+        compositeDisposable.add(
+            RestService.fetchMeetingList(meetingRoom.id)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    if (it.isNullOrEmpty()) {
+                        showEmptyFragment(ListDisplayType.MEETING_LIST)
+                        showMeetingRoomDescriptionFragment(meetingRoom)
+                    } else {
+                        val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                        saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                        meetingRoomSubject.onNext(newMeetingRoomObject)
+                        showMeetingRoomDetails(newMeetingRoomObject)
+                    }
+                    invalidateOptionsMenu()
+                }, { Log.e(TAG, it.toString()) })
+        )
+    }
+
+    fun showEmptyFragment(type: ListDisplayType) {
         var text = ""
         var layoutRes = 0
         when (type) {
@@ -110,18 +130,46 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .commit()
     }
 
-    fun onMeetingRoomSelected(meetingRoom: MeetingRoom) {
-        compositeDisposable.add(
-            RestService.fetchMeetingList(meetingRoom.id)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
-                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
-                    meetingRoomSubject.onNext(newMeetingRoomObject)
-                    navigateToMeetingRoomDetails(newMeetingRoomObject)
-                    invalidateOptionsMenu()
-                }, { Log.e(TAG, it.toString()) })
-        )
+    private fun showMeetingRoomDescriptionFragment(meetingRoom: MeetingRoom) {
+        val meetingRoomListFragment =
+            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
+        if (meetingRoomListFragment != null) {
+            supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
+        }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDescriptionFragment.getInstance())
+            .commit()
+        supportActionBar?.title = meetingRoom.name
+    }
+
+    private fun showMeetingRoomDetails(meetingRoom: MeetingRoom) {
+        val meetingRoomListFragment =
+            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
+        if (meetingRoomListFragment != null) {
+            supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
+        }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDescriptionFragment.getInstance())
+            .replace(R.id.meetingRoomMeetingListContainer, MeetingListFragment.getInstance())
+            .commit()
+        supportActionBar?.title = meetingRoom.name
+    }
+
+    private fun showMeetingRoomListFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.meetingRoomListContainer,
+                MeetingRoomListFragment.getInstance(),
+                meetingRoomListFragmentTag
+            )
+            .commit()
+        supportActionBar?.title = "Meeting room chooser"
+    }
+
+    private fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) {
+        getPreferences(Context.MODE_PRIVATE)?.edit()
+            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
+            ?.apply()
     }
 
     private fun removePersistedMeetingRoom() {
@@ -131,16 +179,17 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     }
 
-    private fun navigateToMeetingRoomList() {
-        supportFragmentManager.beginTransaction()
-            .add(
-                R.id.meetingRoomListContainer,
-                MeetingRoomListFragment.getInstance(),
-                meetingRoomListFragmentTag
+    private fun updateMeetingRoomWithMeetings(
+        meetingRoom: MeetingRoom,
+        meetings: List<Meeting>
+    ): MeetingRoom =
+        this.run {
+            MeetingRoom(
+                id = meetingRoom.id,
+                name = meetingRoom.name,
+                meetingList = meetings
             )
-            .commit()
-        supportActionBar?.title = "Meeting room chooser"
-    }
+        }
 
     private fun refreshMeetingRoomSubjectOnDayChange(meetingRoom: MeetingRoom) {
         compositeDisposable.add(Observable.timer(
@@ -156,38 +205,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }) { Log.d(TAG, it.toString()) })
     }
 
-    private fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) {
-        getPreferences(Context.MODE_PRIVATE)?.edit()
-            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
-            ?.apply()
-    }
-
-    private fun navigateToMeetingRoomDetails(meetingRoom: MeetingRoom) {
-        val meetingRoomListFragment =
-            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
-        if (meetingRoomListFragment != null) {
-            supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
-        }
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDescriptionFragment.getInstance())
-            .replace(R.id.meetingRoomMeetingListContainer, MeetingListFragment.getInstance())
-            .commit()
-        supportActionBar?.title = meetingRoom.name
-    }
-
-    private fun updateMeetingRoomWithMeetings(
-        meetingRoom: MeetingRoom,
-        meetings: List<Meeting>
-    ): MeetingRoom =
-        this.run {
-            MeetingRoom(
-                id = meetingRoom.id,
-                name = meetingRoom.name,
-                meetingList = meetings
-            )
-        }
-
-    private fun updateMeetingListInMeetingRoomByInterval(
+    private fun updateMeetingListInMeetingRoomByPeriod(
         meetingRoom: MeetingRoom,
         period: Long,
         periodUnit: TimeUnit
@@ -198,9 +216,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
-                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
-                    meetingRoomSubject.onNext(newMeetingRoomObject)
+                    if (it.isNullOrEmpty()) {
+                        showEmptyFragment(ListDisplayType.MEETING_LIST)
+                        showMeetingRoomDescriptionFragment(meetingRoom)
+                    } else {
+                        val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                        saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                        meetingRoomSubject.onNext(newMeetingRoomObject)
+                    }
                 }) { Log.e(TAG, it.toString()) }
         )
     }

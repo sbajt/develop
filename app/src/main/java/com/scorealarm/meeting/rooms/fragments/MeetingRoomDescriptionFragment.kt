@@ -1,6 +1,8 @@
 package com.scorealarm.meeting.rooms.fragments
 
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
@@ -24,6 +26,7 @@ class MeetingRoomDescriptionFragment :
 
     override fun onStart() {
         super.onStart()
+        setHasOptionsMenu(true)
         initViews()
         runClock()
         observeMeetingRoomSubject()
@@ -32,6 +35,10 @@ class MeetingRoomDescriptionFragment :
     override fun onStop() {
         super.onStop()
         compositeDisposable.dispose()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.remove_persisted_data, menu)
     }
 
     private fun initViews() {
