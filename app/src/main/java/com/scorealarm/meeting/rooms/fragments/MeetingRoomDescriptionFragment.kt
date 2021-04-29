@@ -3,11 +3,15 @@ package com.scorealarm.meeting.rooms.fragments
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.View
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.Config
+import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.Meeting
+import com.scorealarm.meeting.rooms.utils.Utils.isTodayAllDay
+import com.scorealarm.meeting.rooms.utils.Utils.state
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -21,8 +25,6 @@ class MeetingRoomDescriptionFragment :
     Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
-
-    private var currentMeeting: Meeting? = null
 
     override fun onStart() {
         super.onStart()
@@ -88,33 +90,48 @@ class MeetingRoomDescriptionFragment :
             Schedulers.newThread()
         )
             .map {
-                meetings?.firstOrNull {
-                    it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow
-                            || Period(it.startDateTime, it.endDateTime).days == 1
+                meetings?.filter {
+                    it.state() != MeetingStateType.EXCLUDED
                 }
             }
-            .filter { it != currentMeeting }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                bindViews(it)
-                currentMeeting = it
+                bindViews(it?.singleOrNull { it.isTodayAllDay() || it.state() == MeetingStateType.INCLUDED })
             }) { Log.d(TAG, it.toString()) }
         )
     }
 
     private fun bindViews(meeting: Meeting?) {
-        currentMeetingTimeView.text = when {
-            meeting == null -> ""
-            Period(meeting.startDateTime, meeting.endDateTime).days == 1 -> "Meeting lasts all day"
-            else -> "${meeting.startDateTime.toString("HH:mm")} - ${meeting.endDateTime.toString("HH:mm")}"
-        }
+        currentMeetingTimeView.text =
+            if (meeting.state() != MeetingStateType.EXCLUDED)
+                if (meeting.isTodayAllDay())
+                    "Meeting lasts all day"
+                else
+                    "${meeting?.startDateTime?.toString("HH:mm")} - ${
+                        meeting?.endDateTime?.toString(
+                            "HH:mm"
+                        )
+                    }"
+            else
+                ""
         currentMeetingNameView?.run {
-            text = if (meeting == null) "" else meeting.title
+            visibility = if (meeting?.title?.isNotBlank() == true) View.VISIBLE else View.GONE
+            text = meeting?.title ?: ""
             textSize = if (meeting == null) 16f else 24f
         }
-        currentMeetingDescriptionView.text = if (meeting == null) "" else meeting.description
-        currentMeetingOrganizerView.text = if (meeting == null) "" else "${meeting.organizer}"
-        invitesCountView.text = if (meeting == null) "" else "Invites: ${meeting.invitesNumber}"
+        currentMeetingDescriptionView?.run {
+            visibility = if (meeting?.description?.isNotBlank() == true) View.VISIBLE else View.GONE
+            text = if (meeting?.description.isNullOrBlank()) "" else meeting?.description
+        }
+        currentMeetingOrganizerView?.run {
+            visibility =
+                if (meeting != null && !meeting.organizer.isNullOrBlank()) View.VISIBLE else View.GONE
+            text = if (meeting == null) "" else "${meeting.organizer}"
+        }
+        invitesCountView?.run {
+            visibility = if (meeting?.invitesNumber != null) View.VISIBLE else View.GONE
+            text = if (meeting == null) "" else "Invites: ${meeting.invitesNumber}"
+        }
     }
 
 
