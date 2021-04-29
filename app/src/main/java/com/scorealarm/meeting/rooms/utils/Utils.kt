@@ -10,16 +10,17 @@ object Utils {
 
     fun Meeting?.state(): MeetingStateType {
         return when {
+            this == null -> MeetingStateType.EXCLUDED
             Interval(
                 DateTime.now().withTimeAtStartOfDay(),
                 DateTime.now().withTimeAtStartOfDay().plusDays(1)
             )
-                .contains(this?.startDateTime) ||
-                    this?.startDateTime == DateTime.now()
+                .contains(this.startDateTime) ||
+                    this.startDateTime == DateTime.now()
                 .withTimeAtStartOfDay() -> MeetingStateType.INCLUDED
             Interval(
-                this?.startDateTime,
-                this?.endDateTime
+                this.startDateTime,
+                this.endDateTime
             ).containsNow() -> MeetingStateType.ONGOING
             else -> MeetingStateType.EXCLUDED
         }
@@ -27,4 +28,23 @@ object Utils {
 
     fun Meeting?.isTodayAllDay() =
         Period(this?.startDateTime, this?.endDateTime).days == 1
+
+    fun Meeting?.isOngoing() =
+        Interval(
+            this?.startDateTime,
+            this?.endDateTime
+        ).containsNow()
+
+    fun List<Meeting>?.filterToday(): List<Meeting> {
+        val todayMeetingList = this?.filter { it.state() != MeetingStateType.EXCLUDED }
+        return if (todayMeetingList.isNullOrEmpty())
+            emptyList()
+        else {
+            if (todayMeetingList.any { it.isTodayAllDay() })
+                listOf(todayMeetingList.single { it.isTodayAllDay() })
+            else
+                todayMeetingList
+        }
+    }
+
 }

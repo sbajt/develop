@@ -3,12 +3,11 @@ package com.scorealarm.meeting.rooms.fragments
 import android.util.Log
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.ListDisplayType
-import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingListAdapter
+import com.scorealarm.meeting.rooms.utils.Utils.filterToday
 import com.scorealarm.meeting.rooms.utils.Utils.isTodayAllDay
-import com.scorealarm.meeting.rooms.utils.Utils.state
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -36,21 +35,17 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (it.meetingList.isNullOrEmpty()) {
-                        (activity as MainActivity).run {
-                            showEmptyFragment(ListDisplayType.MEETING_LIST)
-                        }
-                    } else {
-                        val todayMeetingList =
-                            it.meetingList.filter { it.state() != MeetingStateType.EXCLUDED }
-                        if (todayMeetingList.isNullOrEmpty())
-                            (activity as MainActivity).showEmptyFragment(ListDisplayType.MEETING_LIST)
-                        else {
+                    val todayMeetingList =
+                        it.meetingList.filterToday()
+                    if (todayMeetingList.isNullOrEmpty())
+                        (activity as MainActivity).showEmptyFragment(ListDisplayType.MEETING_LIST)
+                    else {
+                        listAdapter.update(
                             if (todayMeetingList.any { it.isTodayAllDay() })
-                                listAdapter.update(listOf(todayMeetingList.first { it.isTodayAllDay() }))
+                                listOf(todayMeetingList.first { it.isTodayAllDay() })
                             else
-                                listAdapter.update(todayMeetingList)
-                        }
+                                todayMeetingList
+                        )
                     }
                 }) { Log.d(TAG, it.toString()) }
         )

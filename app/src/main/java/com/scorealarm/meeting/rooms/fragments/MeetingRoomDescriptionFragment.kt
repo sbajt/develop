@@ -10,6 +10,9 @@ import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.Meeting
+import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.utils.Utils.filterToday
+import com.scorealarm.meeting.rooms.utils.Utils.isOngoing
 import com.scorealarm.meeting.rooms.utils.Utils.isTodayAllDay
 import com.scorealarm.meeting.rooms.utils.Utils.state
 import io.reactivex.Observable
@@ -18,7 +21,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
-import org.joda.time.Period
 import java.util.concurrent.TimeUnit
 
 class MeetingRoomDescriptionFragment :
@@ -67,41 +69,38 @@ class MeetingRoomDescriptionFragment :
             (activity as MainActivity).meetingRoomSubject
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ setupDescriptionViews(it.meetingList) })
-                { Log.e(TAG, it.toString()) }
+                .subscribe({
+                    val todayMeetingList =
+                        it.meetingList.filterToday()
+                    bindViews(todayMeetingList.first {
+                        it.isTodayAllDay() || it.isOngoing()
+                    }, !todayMeetingList.isNullOrEmpty())
+                    startPeriodicallyUpdatingViews(it)
+                }) { Log.e(TAG, it.toString()) }
         )
     }
 
-    private fun setupDescriptionViews(meetings: List<Meeting>?) {
-        val currentMeeting = meetings?.firstOrNull {
-            it.startDateTime.isBeforeNow && it.endDateTime.isAfterNow
-                    || Period(it.startDateTime, it.endDateTime).minutes == 0
-        }
-        bindViews(currentMeeting)
-        if (currentMeeting != null) {
-            periodicallyRefreshViews(meetings)
-        }
-    }
-
-    private fun periodicallyRefreshViews(meetings: List<Meeting>?) {
+    /**
+     * Refresh current meeting if any, description views each second
+     **/
+    private fun startPeriodicallyUpdatingViews(meetingRoom: MeetingRoom?) {
         compositeDisposable.add(Observable.interval(
             1,
             TimeUnit.SECONDS,
             Schedulers.newThread()
         )
-            .map {
-                meetings?.filter {
-                    it.state() != MeetingStateType.EXCLUDED
-                }
-            }
+            .map { meetingRoom?.meetingList?.filterToday() }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                bindViews(it?.singleOrNull { it.isTodayAllDay() || it.state() == MeetingStateType.INCLUDED })
+                bindViews(it?.firstOrNull {
+                    it.isTodayAllDay() || it.isOngoing()
+                }, !it.isNullOrEmpty())
             }) { Log.d(TAG, it.toString()) }
         )
     }
 
-    private fun bindViews(meeting: Meeting?) {
+
+    private fun bindViews(meeting: Meeting?, hasMeetingsToday: Boolean) {
         currentMeetingTimeView.text =
             if (meeting.state() != MeetingStateType.EXCLUDED)
                 if (meeting.isTodayAllDay())
@@ -115,13 +114,19 @@ class MeetingRoomDescriptionFragment :
             else
                 ""
         currentMeetingNameView?.run {
-            visibility = if (meeting?.title?.isNotBlank() == true) View.VISIBLE else View.GONE
-            text = meeting?.title ?: ""
+            visibility =
+                if (meeting?.title?.isNotBlank() == true) View.VISIBLE else View.GONE
+            text = if (meeting?.title.isNullOrBlank())
+                if (hasMeetingsToday) "No ongoing meeting" else ""
+            else
+                meeting?.title
             textSize = if (meeting == null) 16f else 24f
         }
         currentMeetingDescriptionView?.run {
-            visibility = if (meeting?.description?.isNotBlank() == true) View.VISIBLE else View.GONE
-            text = if (meeting?.description.isNullOrBlank()) "" else meeting?.description
+            visibility =
+                if (meeting?.description?.isNotBlank() == true) View.VISIBLE else View.GONE
+            text =
+                if (meeting?.description.isNullOrBlank()) "" else meeting?.description
         }
         currentMeetingOrganizerView?.run {
             visibility =
