@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
-    val meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom>(1)
+    var meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom>(1)
 
     private val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
 
@@ -85,6 +85,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         return when (item.itemId) {
             R.id.removePersistedData -> {
                 removePersistedMeetingRoom()
+                meetingRoomSubject = ReplaySubject.createWithSize(1)
                 showMeetingRoomListFragment()
                 invalidateOptionsMenu()
                 true

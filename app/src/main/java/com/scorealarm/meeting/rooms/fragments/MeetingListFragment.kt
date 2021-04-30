@@ -7,7 +7,6 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingListAdapter
 import com.scorealarm.meeting.rooms.utils.Utils.filterToday
-import com.scorealarm.meeting.rooms.utils.Utils.isTodayAllDay
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -37,15 +36,8 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribe({
                     val todayMeetingList =
                         it.meetingList.filterToday()
-                    if (todayMeetingList.isNullOrEmpty())
+                    listAdapter.update(todayMeetingList) {
                         (activity as MainActivity).showEmptyFragment(ListDisplayType.MEETING_LIST)
-                    else {
-                        listAdapter.update(
-                            if (todayMeetingList.any { it.isTodayAllDay() })
-                                listOf(todayMeetingList.first { it.isTodayAllDay() })
-                            else
-                                todayMeetingList
-                        )
                     }
                 }) { Log.d(TAG, it.toString()) }
         )

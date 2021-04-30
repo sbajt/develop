@@ -6,15 +6,12 @@ import android.view.MenuInflater
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.Config
-import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.utils.Utils.filterToday
-import com.scorealarm.meeting.rooms.utils.Utils.isOngoing
 import com.scorealarm.meeting.rooms.utils.Utils.isTodayAllDay
-import com.scorealarm.meeting.rooms.utils.Utils.state
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -72,9 +69,8 @@ class MeetingRoomDescriptionFragment :
                 .subscribe({
                     val todayMeetingList =
                         it.meetingList.filterToday()
-                    bindViews(todayMeetingList.first {
-                        it.isTodayAllDay() || it.isOngoing()
-                    }, !todayMeetingList.isNullOrEmpty())
+                    val ongoingMeeting = todayMeetingList.firstOrNull { it.isTodayAllDay() }
+                    bindViews(ongoingMeeting, !todayMeetingList.isNullOrEmpty())
                     startPeriodicallyUpdatingViews(it)
                 }) { Log.e(TAG, it.toString()) }
         )
@@ -92,9 +88,7 @@ class MeetingRoomDescriptionFragment :
             .map { meetingRoom?.meetingList?.filterToday() }
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                bindViews(it?.firstOrNull {
-                    it.isTodayAllDay() || it.isOngoing()
-                }, !it.isNullOrEmpty())
+                bindViews(it?.firstOrNull { it.isTodayAllDay() }, !it.isNullOrEmpty())
             }) { Log.d(TAG, it.toString()) }
         )
     }
@@ -102,20 +96,14 @@ class MeetingRoomDescriptionFragment :
 
     private fun bindViews(meeting: Meeting?, hasMeetingsToday: Boolean) {
         currentMeetingTimeView.text =
-            if (meeting.state() != MeetingStateType.EXCLUDED)
-                if (meeting.isTodayAllDay())
-                    "Meeting lasts all day"
-                else
-                    "${meeting?.startDateTime?.toString("HH:mm")} - ${
-                        meeting?.endDateTime?.toString(
-                            "HH:mm"
-                        )
-                    }"
-            else
-                ""
+            when {
+                meeting == null -> ""
+                meeting.isTodayAllDay() -> "Meeting lasts all day"
+                else -> "${meeting.startDateTime.toString("HH:mm")} - ${meeting.endDateTime.toString("HH:mm")}"
+            }
         currentMeetingNameView?.run {
             visibility =
-                if (meeting?.title?.isNotBlank() == true) View.VISIBLE else View.GONE
+                if (meeting?.title?.isNotBlank() == true && hasMeetingsToday) View.VISIBLE else View.GONE
             text = if (meeting?.title.isNullOrBlank())
                 if (hasMeetingsToday) "No ongoing meeting" else ""
             else

@@ -29,10 +29,12 @@ class MeetingListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun getItemId(position: Int): Long =
         items[position].hashCode().toLong()
 
-    fun update(input: List<Meeting>) {
+    fun update(input: List<Meeting>, onEmptyList: () -> Unit = {}) {
         items.clear()
         items.addAll(input)
         notifyDataSetChanged()
+        if (items.isEmpty())
+            onEmptyList.invoke()
     }
 
 }

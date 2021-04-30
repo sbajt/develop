@@ -29,12 +29,6 @@ object Utils {
     fun Meeting?.isTodayAllDay() =
         Period(this?.startDateTime, this?.endDateTime).days == 1
 
-    fun Meeting?.isOngoing() =
-        Interval(
-            this?.startDateTime,
-            this?.endDateTime
-        ).containsNow()
-
     fun List<Meeting>?.filterToday(): List<Meeting> {
         val todayMeetingList = this?.filter { it.state() != MeetingStateType.EXCLUDED }
         return if (todayMeetingList.isNullOrEmpty())
