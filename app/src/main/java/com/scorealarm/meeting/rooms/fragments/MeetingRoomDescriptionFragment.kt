@@ -1,5 +1,6 @@
 package com.scorealarm.meeting.rooms.fragments
 
+import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
@@ -21,15 +22,20 @@ import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
 import java.util.concurrent.TimeUnit
 
+
 class MeetingRoomDescriptionFragment :
     Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
     override fun onStart() {
         super.onStart()
-        setHasOptionsMenu(true)
-        initViews()
+        timeView?.text = DateTime.now().toString("HH:mm")
         runClock()
         observeMeetingRoomSubject()
     }
@@ -41,10 +47,6 @@ class MeetingRoomDescriptionFragment :
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.remove_persisted_data, menu)
-    }
-
-    private fun initViews() {
-        timeView?.text = DateTime.now().toString("HH:mm")
     }
 
     private fun runClock() {
@@ -67,17 +69,18 @@ class MeetingRoomDescriptionFragment :
             (activity as MainActivity).meetingRoomSubject
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
+                .subscribe({ meetingRoom ->
                     val ongoingMeeting =
-                        it.meetingList?.firstOrNull { it.state() == MeetingStateType.ONGOING }
-                    bindViews(ongoingMeeting, it.meetingList.filterToday().count() > 1)
+                        meetingRoom.meetingList?.firstOrNull { it.state() == MeetingStateType.ONGOING }
+                    bindViews(ongoingMeeting, meetingRoom.meetingList.filterToday().count() > 1)
                     startPeriodicallyUpdatingViews()
                 }) { Log.e(TAG, it.toString()) }
         )
     }
 
     /**
-     * Refresh current meeting if any, description views each second
+     * Refresh current meeting if any.
+     * Upeates description views each second.
      **/
     private fun startPeriodicallyUpdatingViews() {
         compositeDisposable.add(Observable.interval(
@@ -87,10 +90,10 @@ class MeetingRoomDescriptionFragment :
         )
             .flatMap { (activity as MainActivity).meetingRoomSubject }
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
+            .subscribe({ meetingRoom ->
                 val ongoingMeeting =
-                    it.meetingList?.firstOrNull { it.state() == MeetingStateType.ONGOING }
-                bindViews(ongoingMeeting, it.meetingList.filterToday().count() > 1)
+                    meetingRoom.meetingList?.firstOrNull { it.state() == MeetingStateType.ONGOING }
+                bindViews(ongoingMeeting, meetingRoom.meetingList.filterToday().count() > 1)
             }) { Log.d(TAG, it.toString()) }
         )
     }

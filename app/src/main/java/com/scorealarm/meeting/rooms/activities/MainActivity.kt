@@ -74,19 +74,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.dispose()
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.removePersistedData)?.isVisible =
-            getPreferences(Context.MODE_PRIVATE).contains(meetingRoomKey)
-        return true
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.removePersistedData -> {
                 removePersistedMeetingRoom()
                 meetingRoomSubject = ReplaySubject.createWithSize(1)
                 showMeetingRoomListFragment()
-                invalidateOptionsMenu()
                 true
             }
             else -> super.onOptionsItemSelected(item)

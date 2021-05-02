@@ -1,6 +1,9 @@
 package com.scorealarm.meeting.rooms.fragments
 
+import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuInflater
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
@@ -12,11 +15,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.fragment_meeting_room_list.*
 
+
 class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
     ListItemActionListener<MeetingRoom> {
 
     private val listAdapter = MeetingRoomListAdapter(this)
     private val compositeDisposable = CompositeDisposable()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onStart() {
         super.onStart()
@@ -26,6 +35,10 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(listAdapter::update) { Log.d(TAG, it.toString()) }
         )
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        menu.clear()
     }
 
     override fun onStop() {
