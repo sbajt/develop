@@ -33,6 +33,7 @@ object RestService {
         })
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     private val api = Retrofit.Builder()
@@ -45,10 +46,33 @@ object RestService {
 
     fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
         api.getMeetingRooms().flatMap { Observable.just(it.rooms) }.subscribeOn(Schedulers.io())
+//        mockMeetingRoomList().subscribeOn(Schedulers.io())
 
     fun fetchMeetingList(meetingRoomId: String): Observable<List<Meeting>> =
         api.getMeetings(meetingRoomId).flatMap { Observable.just(it.events) }
             .subscribeOn(Schedulers.io())
+
+    private fun mockMeetingRoomList(): Observable<List<MeetingRoom>> {
+        return Observable.just(
+            listOf(
+                MeetingRoom(
+                    id = "meetingRoom1",
+                    name = "Meat 1",
+                    meetingList = null
+                ),
+                MeetingRoom(
+                    id = "meetingRoom2",
+                    name = "Meat 2",
+                    meetingList = null
+                ),
+                MeetingRoom(
+                    id = "meetingRoom3",
+                    name = "Meat 3",
+                    meetingList = null
+                )
+            )
+        )
+    }
 
     private fun mockMeetingList(): Observable<List<Meeting>> =
         Observable.just(

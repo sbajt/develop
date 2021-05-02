@@ -5,7 +5,6 @@ import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.startup.AppInitializer
@@ -36,6 +35,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
 
     private val meetingRoomListFragmentTag = "MeetingRoomListFragment"
+    private val meetingDescriptionFragmentTag = "MeetingDescriptionFragment"
+    private val meetingListFragmentTag = "MeetingListFragment"
     private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,13 +61,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Config.DATA_REFRESH_RATE_IN_SECONDS,
                 TimeUnit.SECONDS
             )
-            if (meetingRoom.meetingList.isNullOrEmpty()) {
+            if (meetingRoom.meetingList.isNullOrEmpty())
                 showEmptyFragment(ListDisplayType.MEETING_LIST)
-                showMeetingRoomDescriptionFragment(meetingRoom)
-            } else
-                onSelectMeetingRoom(meetingRoom)
-
-            invalidateOptionsMenu()
+            else
+                showMeetingListFragment()
+            showMeetingRoomDescriptionFragment(meetingRoom)
         }
     }
 
@@ -100,15 +99,15 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     if (it.isNullOrEmpty()) {
-                        showEmptyFragment(ListDisplayType.MEETING_LIST)
                         showMeetingRoomDescriptionFragment(meetingRoom)
+                        showEmptyFragment(ListDisplayType.MEETING_LIST)
                     } else {
                         val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
-                        saveMeetingRoomIntoPreference(newMeetingRoomObject)
                         meetingRoomSubject.onNext(newMeetingRoomObject)
-                        showMeetingRoomDetails(newMeetingRoomObject)
+                        saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                        showMeetingRoomDescriptionFragment(newMeetingRoomObject)
+                        showMeetingListFragment()
                     }
-                    invalidateOptionsMenu()
                 }, { Log.e(TAG, it.toString()) })
         )
     }
@@ -138,25 +137,38 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
         }
         supportFragmentManager.beginTransaction()
-            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDescriptionFragment.getInstance())
+            .replace(
+                R.id.meetingRoomDescriptionContainer,
+                MeetingRoomDescriptionFragment.getInstance()
+            )
             .commit()
         supportActionBar?.title = meetingRoom.name
     }
 
-    private fun showMeetingRoomDetails(meetingRoom: MeetingRoom) {
-        val meetingRoomListFragment =
-            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
-        if (meetingRoomListFragment != null) {
-            supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
-        }
+    private fun showMeetingListFragment() {
+        val meetingListFragment =
+            supportFragmentManager.findFragmentByTag(meetingListFragmentTag)
+        if (meetingListFragment != null)
+            supportFragmentManager.beginTransaction()
+                .remove(meetingListFragment)
+                .commit()
         supportFragmentManager.beginTransaction()
-            .replace(R.id.meetingRoomDetailsContainer, MeetingRoomDescriptionFragment.getInstance())
             .replace(R.id.meetingRoomMeetingListContainer, MeetingListFragment.getInstance())
             .commit()
-        supportActionBar?.title = meetingRoom.name
     }
 
     private fun showMeetingRoomListFragment() {
+        val meetingsListFragment =
+            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
+        if (meetingsListFragment != null) {
+            supportFragmentManager.beginTransaction().remove(meetingsListFragment).commit()
+        }
+        val meetingDescriptionFragment =
+            supportFragmentManager.findFragmentByTag(meetingDescriptionFragmentTag)
+        if (meetingDescriptionFragment != null)
+            supportFragmentManager.beginTransaction()
+                .remove(meetingDescriptionFragment)
+                .commit()
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.meetingRoomListContainer,

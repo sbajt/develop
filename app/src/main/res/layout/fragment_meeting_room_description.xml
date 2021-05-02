@@ -30,7 +30,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textSize="24sp"
-            android:textStyle="normal"
+            android:textStyle="bold"
             tools:text="Name" />
 
         <TextView

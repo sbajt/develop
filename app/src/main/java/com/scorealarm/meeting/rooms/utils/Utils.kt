@@ -9,19 +9,18 @@ import org.joda.time.Period
 object Utils {
 
     fun Meeting?.state(): MeetingStateType {
+        val meetingInterval = Interval(
+            this?.startDateTime,
+            this?.endDateTime
+        )
         return when {
             this == null -> MeetingStateType.EXCLUDED
+            meetingInterval.containsNow() || this.startDateTime.hourOfDay == 0 -> MeetingStateType.ONGOING
             Interval(
                 DateTime.now().withTimeAtStartOfDay(),
                 DateTime.now().withTimeAtStartOfDay().plusDays(1)
             )
-                .contains(this.startDateTime) ||
-                    this.startDateTime == DateTime.now()
-                .withTimeAtStartOfDay() -> MeetingStateType.INCLUDED
-            Interval(
-                this.startDateTime,
-                this.endDateTime
-            ).containsNow() -> MeetingStateType.ONGOING
+                .contains(this.startDateTime) -> MeetingStateType.INCLUDED
             else -> MeetingStateType.EXCLUDED
         }
     }

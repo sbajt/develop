@@ -35,9 +35,4 @@ class MeetingRoomListAdapter(private val actionListener: ListItemActionListener<
         notifyDataSetChanged()
     }
 
-    fun clear() {
-        items.clear()
-        notifyDataSetChanged()
-    }
-
 }
