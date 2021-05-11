@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 showEmptyFragment(ListDisplayType.MEETING_LIST)
             else
                 showMeetingListFragment()
+
+            meetingRoomSubject.onNext(meetingRoom)
             showMeetingRoomDescriptionFragment(meetingRoom)
         }
     }
