@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Meeting Rooms</string>
+
+    <string name="meeting_room_list_fragment_tag">MeetingRoomListFragment</string>
+    <string name="meeting_description_fragment_tag">MeetingDescriptionFragment</string>
+    <string name="meeting_list_fragment_tag">MeetingListFragment</string>
+
+    <string name="meeting_state_all_day">Meeting lasts all day</string>
+    <string name="meeting_time_format">HH:mm</string>
+
+    <string name="empty_meeting_room_list">No meeting rooms</string>
+    <string name="empty_meeting_list">No meetings today</string>
 </resources>

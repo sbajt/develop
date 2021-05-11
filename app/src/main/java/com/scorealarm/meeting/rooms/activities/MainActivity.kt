@@ -34,9 +34,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
 
-    private val meetingRoomListFragmentTag = "MeetingRoomListFragment"
-    private val meetingDescriptionFragmentTag = "MeetingDescriptionFragment"
-    private val meetingListFragmentTag = "MeetingListFragment"
     private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,14 +88,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             RestService.fetchMeetingList(meetingRoom.id)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
+                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                    meetingRoomSubject.onNext(newMeetingRoomObject)
+                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                    showMeetingRoomDescriptionFragment(meetingRoom)
                     if (it.isNullOrEmpty()) {
-                        showMeetingRoomDescriptionFragment(meetingRoom)
                         showEmptyFragment(ListDisplayType.MEETING_LIST)
                     } else {
-                        val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
-                        meetingRoomSubject.onNext(newMeetingRoomObject)
-                        saveMeetingRoomIntoPreference(newMeetingRoomObject)
-                        showMeetingRoomDescriptionFragment(newMeetingRoomObject)
                         showMeetingListFragment()
                     }
                 }, { Log.e(TAG, it.toString()) })
@@ -110,11 +106,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         var layoutRes = 0
         when (type) {
             ListDisplayType.MEETING_ROOM_LIST -> {
-                text = "No meeting rooms"
+                text = getString(R.string.empty_meeting_room_list)
                 layoutRes = R.id.meetingRoomListContainer
             }
             ListDisplayType.MEETING_LIST -> {
-                text = "No meetings today"
+                text = getString(R.string.empty_meeting_list)
                 layoutRes = R.id.meetingRoomMeetingListContainer
             }
         }
@@ -125,7 +121,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun showMeetingRoomDescriptionFragment(meetingRoom: MeetingRoom) {
         val meetingRoomListFragment =
-            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_list_fragment_tag))
         if (meetingRoomListFragment != null) {
             supportFragmentManager.beginTransaction().remove(meetingRoomListFragment).commit()
         }
@@ -140,7 +136,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun showMeetingListFragment() {
         val meetingListFragment =
-            supportFragmentManager.findFragmentByTag(meetingListFragmentTag)
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_list_fragment_tag))
         if (meetingListFragment != null)
             supportFragmentManager.beginTransaction()
                 .remove(meetingListFragment)
@@ -152,12 +148,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun showMeetingRoomListFragment() {
         val meetingsListFragment =
-            supportFragmentManager.findFragmentByTag(meetingRoomListFragmentTag)
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_list_fragment_tag))
         if (meetingsListFragment != null) {
             supportFragmentManager.beginTransaction().remove(meetingsListFragment).commit()
         }
         val meetingDescriptionFragment =
-            supportFragmentManager.findFragmentByTag(meetingDescriptionFragmentTag)
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_description_fragment_tag))
         if (meetingDescriptionFragment != null)
             supportFragmentManager.beginTransaction()
                 .remove(meetingDescriptionFragment)
@@ -166,7 +162,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .replace(
                 R.id.meetingRoomListContainer,
                 MeetingRoomListFragment.getInstance(),
-                meetingRoomListFragmentTag
+                getString(R.string.meeting_room_list_fragment_tag)
             )
             .commit()
         supportActionBar?.title = "Meeting room chooser"

@@ -18,10 +18,9 @@ data class Meeting(
     val startDateTime: DateTime,
 
     @SerializedName("end")
-    val endDateTime: DateTime
+    val endDateTime: DateTime,
 
-
-) {
+    ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

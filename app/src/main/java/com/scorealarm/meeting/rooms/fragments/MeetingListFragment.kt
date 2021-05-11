@@ -1,6 +1,5 @@
 package com.scorealarm.meeting.rooms.fragments
 
-import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.ListDisplayType
@@ -37,6 +36,7 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribe({
                     val todayMeetingList =
                         it.meetingList.filterToday()
+                    Log.d(TAG, "${todayMeetingList.size}")
                     listAdapter.update(todayMeetingList) {
                         (activity as MainActivity).showEmptyFragment(ListDisplayType.MEETING_LIST)
                     }
