@@ -2,11 +2,10 @@ package com.scorealarm.meeting.rooms.fragments
 
 import android.util.Log
 import androidx.fragment.app.Fragment
-import com.scorealarm.meeting.rooms.ListDisplayType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingListAdapter
-import com.scorealarm.meeting.rooms.utils.Utils.filterToday
+import com.scorealarm.meeting.rooms.utils.Utils.filterUpcoming
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -35,11 +34,8 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     val todayMeetingList =
-                        it.meetingList.filterToday()
-                    Log.d(TAG, "${todayMeetingList.size}")
-                    listAdapter.update(todayMeetingList) {
-                        (activity as MainActivity).showEmptyFragment(ListDisplayType.MEETING_LIST)
-                    }
+                        it.meetingList.filterUpcoming()
+                    listAdapter.update(todayMeetingList)
                 }) { Log.d(TAG, it.toString()) }
         )
     }
@@ -48,6 +44,5 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
 
         private val TAG = MeetingListFragment::class.java.canonicalName
 
-        fun getInstance() = MeetingListFragment()
     }
 }

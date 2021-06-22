@@ -1,67 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="92dp">
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/timeView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/meetingNameView"
+        android:layout_marginBottom="-12dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textSize="16sp"
-        android:textStyle="italic"
+        android:textSize="28sp"
         tools:text="10:00 - 11:00" />
 
     <TextView
         android:id="@+id/meetingNameView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
+        android:layout_below="@id/timeView"
+        android:layout_marginBottom="-12dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:textFontWeight="700"
+        android:textSize="34sp"
         tools:text="Meeting name" />
 
     <TextView
-        android:id="@+id/meetingOrganizerView"
-        android:layout_width="wrap_content"
+        android:id="@+id/meetingDescriptionView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/meetingNameView"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@id/attendeeCountIconView"
+        android:layout_below="@id/meetingNameView"
         android:ellipsize="end"
-        android:maxLines="1"
+        android:maxLines="2"
         android:textSize="14sp"
-        android:textStyle="italic"
-        tools:text="marijan.martinovic@superology.com" />
+        tools:text="This is a description. Very accurate. Much words. Such room." />
 
-    <ImageView
-        android:id="@+id/attendeeCountIconView"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_toStartOf="@id/attendeeCountView"
-        android:src="@drawable/ic_meeting"
-        app:tint="#a0a0a0" />
-
-    <TextView
-        android:id="@+id/attendeeCountView"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:textColor="#a0a0a0"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:maxLines="1"
-        android:textSize="14sp"
-        tools:text="3" />
+        android:layout_below="@id/meetingDescriptionView"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.7"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_creator_label"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/meetingOrganizerView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:minWidth="300dp"
+                android:textFontWeight="700"
+                android:textSize="16sp"
+                tools:ignore="MissingPrefix"
+                tools:text="marijan.martinovic@superology.com" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.3"
+            android:gravity="bottom|start"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_attendees" />
+
+            <TextView
+                android:id="@+id/invitesCountView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="-4dp"
+                android:textSize="26sp"
+                tools:text="6" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 </RelativeLayout>

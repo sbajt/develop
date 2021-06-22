@@ -1,34 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/containerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:keepScreenOn="true"
-    android:padding="12dp">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="12dp">
-
-        <FrameLayout
-            android:id="@+id/meetingRoomDescriptionContainer"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.5" />
-
-        <FrameLayout
-            android:id="@+id/meetingRoomMeetingListContainer"
-            android:layout_width="match_parent"
-            android:layout_marginTop="16dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-    </LinearLayout>
+    android:orientation="vertical"
+    android:padding="20dp">
 
     <FrameLayout
-        android:id="@+id/meetingRoomListContainer"
+        android:id="@+id/meetingRoomDescriptionContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content" />
 
-</FrameLayout>
+    <FrameLayout
+        android:id="@+id/meetingListContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>

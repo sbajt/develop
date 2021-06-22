@@ -1,5 +1,6 @@
 package com.scorealarm.meeting.rooms.list.viewholders
 
+import android.text.Html
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.scorealarm.meeting.rooms.MeetingStateType
@@ -29,14 +30,16 @@ class MeetingViewHolder(
                                         .toString()
                                 )
                             }"
+                meetingDescriptionView?.text =
+                    Html.fromHtml(meeting.description, Html.FROM_HTML_MODE_COMPACT)
                 meetingNameView?.text = title
                 meetingOrganizerView?.text = organizer
-                attendeeCountView?.text = invitesNumber.toString()
+                invitesCountView?.text = invitesNumber.toString()
             } else {
                 timeView?.text = ""
                 meetingNameView?.text = ""
                 meetingOrganizerView?.text = ""
-                attendeeCountView?.text = ""
+                invitesCountView?.text = ""
             }
         }
     }

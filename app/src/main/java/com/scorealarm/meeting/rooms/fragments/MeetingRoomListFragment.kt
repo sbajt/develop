@@ -24,7 +24,7 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
+        setHasOptionsMenu(false)
     }
 
     override fun onStart() {
@@ -55,8 +55,6 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
     companion object {
 
         private val TAG = MeetingRoomListFragment::class.java.canonicalName
-
-        fun getInstance() = MeetingRoomListFragment()
 
     }
 

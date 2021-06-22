@@ -3,34 +3,52 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:orientation="horizontal">
+    android:layout_marginBottom="16dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/timeView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="-12dp"
+        android:textFontWeight="700"
+        android:textSize="36sp"
+        tools:text="13:37" />
+
+    <TextView
+        android:id="@+id/roomNameView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textFontWeight="700"
+        android:textSize="26sp"
+        tools:text="Test imaginary room" />
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/ongoingMeetingDescriptionContainer"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1"
+        android:layout_marginTop="40dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/currentMeetingTimeView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="-12dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textSize="18sp"
-            android:textStyle="italic"
+            android:textSize="36sp"
             tools:text="start time - end time" />
 
         <TextView
             android:id="@+id/currentMeetingNameView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="-12dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textSize="24sp"
-            android:textStyle="bold"
+            android:textFontWeight="700"
+            android:textSize="52sp"
             tools:text="Name" />
 
         <TextView
@@ -39,39 +57,69 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textSize="16sp"
-            android:textStyle="normal"
-            tools:text="This is a description. Very accurate. Much words. Such room" />
+            android:textSize="18sp"
+            tools:text="This is a description. Very accurate. Much words. Such room." />
 
-        <TextView
-            android:id="@+id/currentMeetingOrganizerView"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textSize="14sp"
-            android:textStyle="italic"
-            tools:text="Meeting organizer" />
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/invitesCountView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textSize="14sp"
-            android:textStyle="italic"
-            tools:text="Invites:" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.7"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_creator_label"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/currentMeetingOrganizerView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textFontWeight="700"
+                    android:textSize="18sp"
+                    tools:text="stanislav.bajt@superology.com" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.3"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_attendees" />
+
+                <TextView
+                    android:id="@+id/invitesCountView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="-4dp"
+                    android:textSize="28sp"
+                    tools:text="6" />
+
+            </LinearLayout>
+
+        </LinearLayout>
     </LinearLayout>
 
     <TextView
-        android:id="@+id/timeView"
+        android:id="@+id/meetingListStatusLabelView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|end"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="12dp"
-        android:textSize="44sp"
-        tools:text="13:37" />
-
+        android:textSize="18sp"
+        tools:text="Up next:" />
 </LinearLayout>

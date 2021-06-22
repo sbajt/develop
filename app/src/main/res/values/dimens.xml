@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="meeting_room_description_space_small">49dp</dimen>
+    <dimen name="meeting_room_description_space_big">76dp</dimen>
+</resources>

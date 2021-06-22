@@ -1,30 +1,36 @@
 package com.scorealarm.meeting.rooms.fragments
 
 import android.os.Bundle
+import android.text.Html
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.View
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
-import com.scorealarm.meeting.rooms.models.Meeting
-import com.scorealarm.meeting.rooms.utils.Utils.isToday
+import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.utils.Utils.filterToday
+import com.scorealarm.meeting.rooms.utils.Utils.setText
 import com.scorealarm.meeting.rooms.utils.Utils.state
+import com.scorealarm.meeting.rooms.utils.Utils.stateText
+import com.scorealarm.meeting.rooms.utils.Utils.styleAndSetText
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
-import java.util.concurrent.TimeUnit
 
 
 class MeetingRoomDescriptionFragment :
     Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
+
+    private lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +39,6 @@ class MeetingRoomDescriptionFragment :
 
     override fun onStart() {
         super.onStart()
-        timeView?.text = DateTime.now().toString("HH:mm")
         runClock()
         observeMeetingRoomSubject()
     }
@@ -43,11 +48,18 @@ class MeetingRoomDescriptionFragment :
         compositeDisposable.dispose()
     }
 
+    override fun onDetach() {
+        super.onDetach()
+        menu.removeItem(R.id.removePersistedData)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.remove_persisted_data, menu)
+        this.menu = menu
     }
 
     private fun runClock() {
+        timeView?.text = DateTime.now().toString("HH:mm")
         compositeDisposable.add(
             Observable.interval(
                 Config.CLOCK_PERIOD,
@@ -67,84 +79,41 @@ class MeetingRoomDescriptionFragment :
             (activity as MainActivity).meetingRoomSubject
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ meetingRoom ->
-                    bindViews(meetingRoom.meetingList?.filter { it.isToday() })
-                    startPeriodicallyUpdatingViews()
-                }) { Log.e(TAG, it.toString()) }
+                .subscribe(::bindViews) { Log.e(TAG, it.toString()) }
         )
     }
 
-    /**
-     * Refresh current meeting if any.
-     * Updates description views each second.
-     **/
-    private fun startPeriodicallyUpdatingViews() {
-        compositeDisposable.add(Observable.interval(
-            1,
-            TimeUnit.SECONDS,
-            Schedulers.newThread()
-        )
-            .flatMap { (activity as MainActivity).meetingRoomSubject }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ meetingRoom ->
-                meetingRoom.meetingList?.run {
-                    bindViews(this.filter { it.isToday() })
-                }
-            }) { Log.d(TAG, it.toString()) }
-        )
-    }
-
-    private fun bindViews(todayMeetingList: List<Meeting>?) {
-        val ongoingMeeting =
-            todayMeetingList?.firstOrNull { it.state() == MeetingStateType.ALL_DAY || it.state() == MeetingStateType.ONGOING }
-        currentMeetingTimeView?.run {
-            text =
-                when {
-                    todayMeetingList.isNullOrEmpty() -> ""
-                    todayMeetingList.firstOrNull { it.state() == MeetingStateType.ALL_DAY } != null -> "Meeting lasts all day"
-                    else -> {
-                        "${ongoingMeeting?.startDateTime?.toString("HH:mm")} - ${
-                            ongoingMeeting?.endDateTime?.toString("HH:mm")
-                        }"
-                    }
-                }
-        }
-        currentMeetingNameView?.run {
-            text = when {
-                todayMeetingList.isNullOrEmpty() -> ""
-                ongoingMeeting != null -> ongoingMeeting.title
-                else -> ""
+    private fun bindViews(meetingRoom: MeetingRoom?) {
+        val todayMeetingList = meetingRoom?.meetingList?.filterToday()
+        if (todayMeetingList?.isNullOrEmpty() == true) {
+            ongoingMeetingDescriptionContainer?.visibility = View.GONE
+        } else {
+            val ongoingMeeting =
+                todayMeetingList.find { it.state() == MeetingStateType.ALL_DAY || it.state() == MeetingStateType.ONGOING }
+            if (ongoingMeeting == null) {
+                ongoingMeetingDescriptionContainer?.visibility = View.GONE
+            } else {
+                ongoingMeetingDescriptionContainer?.visibility = View.VISIBLE
+                currentMeetingNameView?.text = ongoingMeeting.title
+                currentMeetingDescriptionView?.setText(
+                    ongoingMeeting,
+                    Html.fromHtml(
+                        ongoingMeeting.description,
+                        Html.FROM_HTML_MODE_COMPACT
+                    ).toString()
+                )
+                currentMeetingOrganizerView?.setText(ongoingMeeting, ongoingMeeting.organizer)
+                invitesCountView?.setText(ongoingMeeting, ongoingMeeting.invitesNumber?.toString())
+                currentMeetingTimeView?.text = ongoingMeeting.stateText(context, ongoingMeeting)
             }
         }
-        currentMeetingDescriptionView?.run {
-            text = when {
-                todayMeetingList.isNullOrEmpty() -> ""
-                ongoingMeeting != null -> ongoingMeeting.description
-                else -> ""
-            }
-        }
-         currentMeetingOrganizerView?.run {
-             text = when {
-                 todayMeetingList.isNullOrEmpty() -> ""
-                 ongoingMeeting != null -> ongoingMeeting.organizer
-                 else -> ""
-             }
-         }
-         invitesCountView?.run {
-             text = when {
-                 todayMeetingList.isNullOrEmpty() -> ""
-                 ongoingMeeting != null -> "${ongoingMeeting.invitesNumber}"
-                 else -> ""
-             }
-         }
+        meetingListStatusLabelView?.styleAndSetText(todayMeetingList)
+        roomNameView?.text = meetingRoom.name
     }
-
 
     companion object {
 
         private val TAG = MeetingRoomDescriptionFragment::class.java.canonicalName
-
-        fun getInstance() = MeetingRoomDescriptionFragment()
 
     }
 
