@@ -33,9 +33,7 @@ class MeetingListFragment : Fragment(R.layout.fragment_meeting_list) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val todayMeetingList =
-                        it.meetingList.filterUpcoming()
-                    listAdapter.update(todayMeetingList)
+                    listAdapter.update(it.meetingList.filterUpcoming())
                 }) { Log.d(TAG, it.toString()) }
         )
     }

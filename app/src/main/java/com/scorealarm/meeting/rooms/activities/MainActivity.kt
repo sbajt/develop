@@ -1,6 +1,8 @@
 package com.scorealarm.meeting.rooms.activities
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.util.Log
@@ -18,7 +20,7 @@ import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
-import com.scorealarm.meeting.rooms.utils.Utils
+import com.scorealarm.meeting.rooms.utils.Utils.updateMeetings
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -33,11 +35,11 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
-    var meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom?>(1)
-
     private val wifiManager: WifiManager by lazy { getSystemService(Context.WIFI_SERVICE) as WifiManager }
-
+    private val connectivityManager: ConnectivityManager by lazy { getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager }
     private val compositeDisposable = CompositeDisposable()
+
+    var meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom?>(1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +77,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.dispose()
-        Utils.destroy()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -95,7 +96,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             RestService.fetchMeetingList(meetingRoom.id)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                    val newMeetingRoomObject = meetingRoom.updateMeetings(it)
                     meetingRoomSubject.onNext(newMeetingRoomObject)
                     saveMeetingRoomIntoPreference(newMeetingRoomObject)
                     showMeetingRoomDescriptionFragment()
@@ -103,22 +104,31 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 }, { Log.e(TAG, it.toString()) })
         )
 
+    fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) =
+        getPreferences(Context.MODE_PRIVATE)?.edit()
+            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
+            ?.apply()
+
     private fun observeInternetState() {
         val snackbar = Snackbar.make(
             containerView,
             R.string.label_internet_off,
             Snackbar.LENGTH_INDEFINITE
         )
-        compositeDisposable.add(
-            Utils.observeInternetConnectivity(this)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    if (it)
-                        snackbar.dismiss()
-                    else
-                        snackbar.show()
-                }, { Log.e(TAG, it.toString(), it) })
-        )
+        connectivityManager.registerDefaultNetworkCallback(object :
+            ConnectivityManager.NetworkCallback() {
+
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                snackbar.dismiss()
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                snackbar.show()
+            }
+
+        })
     }
 
     private fun showMeetingRoomDescriptionFragment() {
@@ -166,20 +176,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             supportFragmentManager.commit { detach(meetingRoomListFragment) }
     }
 
-    private fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) =
-        getPreferences(Context.MODE_PRIVATE)?.edit()
-            ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
-            ?.apply()
-
     private fun removePersistedMeetingRoom() =
         getPreferences(Context.MODE_PRIVATE).edit()
             .remove(meetingRoomKey)
             .apply()
 
-    private fun updateMeetingRoomWithMeetings(
-        meetingRoom: MeetingRoom,
-        meetings: List<Meeting>
-    ): MeetingRoom = meetingRoom.copy(meetingList = meetings)
 
     private fun refreshMeetingRoomSubjectOnDayChange(meetingRoom: MeetingRoom) =
         compositeDisposable.add(Observable.timer(
@@ -206,7 +207,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val newMeetingRoomObject = updateMeetingRoomWithMeetings(meetingRoom, it)
+                    val newMeetingRoomObject = meetingRoom.updateMeetings(it)
                     if (it.isNotEmpty())
                         saveMeetingRoomIntoPreference(newMeetingRoomObject)
                     meetingRoomSubject.onNext(newMeetingRoomObject)

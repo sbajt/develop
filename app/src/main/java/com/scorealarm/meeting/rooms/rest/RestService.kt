@@ -46,71 +46,10 @@ object RestService {
 
     fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
         api.getMeetingRooms().flatMap { Observable.just(it.rooms) }.subscribeOn(Schedulers.io())
-//        mockMeetingRoomList().subscribeOn(Schedulers.io())
 
     fun fetchMeetingList(meetingRoomId: String): Observable<List<Meeting>> =
         api.getMeetings(meetingRoomId).flatMap { Observable.just(it.events) }
             .subscribeOn(Schedulers.io())
-
-    private fun mockMeetingRoomList(): Observable<List<MeetingRoom>> {
-        return Observable.just(
-            listOf(
-                MeetingRoom(
-                    id = "meetingRoom1",
-                    name = "Meat 1",
-                    meetingList = null
-                ),
-                MeetingRoom(
-                    id = "meetingRoom2",
-                    name = "Meat 2",
-                    meetingList = null
-                ),
-                MeetingRoom(
-                    id = "meetingRoom3",
-                    name = "Meat 3",
-                    meetingList = null
-                )
-            )
-        )
-    }
-
-    private fun mockMeetingList(): Observable<List<Meeting>> =
-        Observable.just(
-            listOf(
-                Meeting(
-                    title = "Test meeting 1",
-                    description = "This is a description. Very accurate. Much words. Such room.",
-                    organizer = "Tester",
-                    invitesNumber = 4,
-                    startDateTime = DateTime.parse("2021-4-25T11:00:00.000+01:00"),
-                    endDateTime = DateTime.parse("2021-4-25T13:00:00.000+01:00")
-                ),
-                Meeting(
-                    title = "Test meeting 2",
-                    description = "This is a description. Very accurate. Much words. Such room.",
-                    organizer = "Tester",
-                    invitesNumber = 1,
-                    startDateTime = DateTime.parse("2021-4-25T13:00:00.000+01:00"),
-                    endDateTime = DateTime.parse("2021-4-25T14:00:00.000+01:00")
-                ),
-                Meeting(
-                    title = "Test meeting 3",
-                    description = "This is a description. Very accurate. Much words. Such room.",
-                    organizer = "Tester",
-                    invitesNumber = 12,
-                    startDateTime = DateTime.parse("2021-4-25T15:00:00.000+01:00"),
-                    endDateTime = DateTime.parse("2021-4-25T16:30:00.000+01:00")
-                ),
-                Meeting(
-                    title = "Test meeting 4",
-                    description = "This is a description. Very accurate. Much words. Such room.",
-                    organizer = "Tester",
-                    invitesNumber = 3,
-                    startDateTime = DateTime.parse("2021-4-25T16:30:00.000+01:00"),
-                    endDateTime = DateTime.parse("2021-4-25T17:00:00.000+01:00")
-                )
-            )
-        )
 
 
 }

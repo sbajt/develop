@@ -47,9 +47,7 @@ class MeetingRoomListFragment : Fragment(R.layout.fragment_meeting_room_list),
     }
 
     override fun onClick(data: MeetingRoom) {
-        (activity as MainActivity).run {
-            onSelectMeetingRoom(data)
-        }
+        (activity as MainActivity).onSelectMeetingRoom(data)
     }
 
     companion object {

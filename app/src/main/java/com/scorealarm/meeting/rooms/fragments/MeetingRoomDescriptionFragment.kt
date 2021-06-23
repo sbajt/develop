@@ -12,11 +12,13 @@ import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.rest.RestService
 import com.scorealarm.meeting.rooms.utils.Utils.filterToday
 import com.scorealarm.meeting.rooms.utils.Utils.setText
 import com.scorealarm.meeting.rooms.utils.Utils.state
 import com.scorealarm.meeting.rooms.utils.Utils.stateText
 import com.scorealarm.meeting.rooms.utils.Utils.styleAndSetText
+import com.scorealarm.meeting.rooms.utils.Utils.updateMeetings
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -85,7 +87,7 @@ class MeetingRoomDescriptionFragment :
 
     private fun bindViews(meetingRoom: MeetingRoom?) {
         val todayMeetingList = meetingRoom?.meetingList?.filterToday()
-        if (todayMeetingList?.isNullOrEmpty() == true) {
+        if (todayMeetingList == null || todayMeetingList.isEmpty()) {
             ongoingMeetingDescriptionContainer?.visibility = View.GONE
         } else {
             val ongoingMeeting =
@@ -108,7 +110,28 @@ class MeetingRoomDescriptionFragment :
             }
         }
         meetingListStatusLabelView?.styleAndSetText(todayMeetingList)
-        roomNameView?.text = meetingRoom.name
+        roomNameView?.text = meetingRoom?.name
+        refreshView?.run {
+            if (meetingRoom == null)
+                isEnabled = false
+            else {
+                isEnabled = true
+                setOnRefreshListener {
+                    compositeDisposable.add(
+                        RestService.fetchMeetingList(meetingRoom.id)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe({
+                                val newMeetingRoomObject = meetingRoom.updateMeetings(it)
+                                (activity as MainActivity).run {
+                                    meetingRoomSubject.onNext(newMeetingRoomObject)
+                                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                                }
+                                isRefreshing = false
+                            }, { Log.e(TAG, it.toString()) })
+                    )
+                }
+            }
+        }
     }
 
     companion object {
