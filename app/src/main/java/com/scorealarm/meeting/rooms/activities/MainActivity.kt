@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
 import androidx.startup.AppInitializer
+import com.google.android.material.snackbar.Snackbar
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
@@ -17,11 +18,13 @@ import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
+import com.scorealarm.meeting.rooms.utils.Utils
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.ReplaySubject
+import kotlinx.android.synthetic.main.activity_main.*
 import net.danlew.android.joda.JodaTimeInitializer
 import org.joda.time.DateTime
 import org.joda.time.Duration
@@ -44,6 +47,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     override fun onStart() {
         super.onStart()
+
+        observeInternetState()
 
         val meetingRoom = RestService.gson.fromJson(
             getPreferences(Context.MODE_PRIVATE).getString(meetingRoomKey, ""),
@@ -70,6 +75,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.dispose()
+        Utils.destroy()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -96,6 +102,24 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     showMeetingListFragment()
                 }, { Log.e(TAG, it.toString()) })
         )
+
+    private fun observeInternetState() {
+        val snackbar = Snackbar.make(
+            containerView,
+            R.string.label_internet_off,
+            Snackbar.LENGTH_INDEFINITE
+        )
+        compositeDisposable.add(
+            Utils.observeInternetConnectivity(this)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    if (it)
+                        snackbar.dismiss()
+                    else
+                        snackbar.show()
+                }, { Log.e(TAG, it.toString(), it) })
+        )
+    }
 
     private fun showMeetingRoomDescriptionFragment() {
         removeMeetingRoomListFragment()

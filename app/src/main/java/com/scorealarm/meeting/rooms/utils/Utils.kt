@@ -2,17 +2,29 @@ package com.scorealarm.meeting.rooms.utils
 
 import android.content.Context
 import android.graphics.Typeface
+import android.net.ConnectivityManager
+import android.net.Network
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.scorealarm.meeting.rooms.MeetingStateType
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.models.Meeting
+import io.reactivex.Observable
+import io.reactivex.subjects.BehaviorSubject
 import org.joda.time.DateTime
 import org.joda.time.Interval
 import org.joda.time.Period
 
+
 object Utils {
+
+    private val TAG = Utils::class.java.canonicalName
+    private val internetConnectivityStateSubject = BehaviorSubject.createDefault(false)
+
+    fun destroy() {
+        internetConnectivityStateSubject.onComplete()
+    }
 
     fun Meeting?.state(): MeetingStateType {
         return when {
@@ -80,4 +92,30 @@ object Utils {
     fun TextView.setText(meeting: Meeting?, text: String?) =
         if (meeting == null || text.isNullOrBlank()) this.text = ""
         else this.text = text
+
+    fun observeInternetConnectivity(context: Context): Observable<Boolean> {
+        observeInternetConnectivityState(context)
+        return internetConnectivityStateSubject
+    }
+
+    private fun observeInternetConnectivityState(context: Context?) {
+        val cm = (context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)
+        if (cm == null)
+            internetConnectivityStateSubject.onNext(false)
+
+        cm?.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                internetConnectivityStateSubject.onNext(true)
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                internetConnectivityStateSubject.onNext(false)
+            }
+
+        })
+    }
+
 }

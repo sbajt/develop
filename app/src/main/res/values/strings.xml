@@ -15,4 +15,6 @@
     <string name="label_meetings_next">Up next:</string>
 
     <string name="label_creator_label">Created by:</string>
+
+    <string name="label_internet_off">Internet is offline</string>
 </resources>
