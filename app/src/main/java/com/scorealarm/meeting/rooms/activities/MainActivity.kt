@@ -17,7 +17,6 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
-import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import com.scorealarm.meeting.rooms.utils.Utils.updateMeetings
@@ -93,7 +92,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     fun onSelectMeetingRoom(meetingRoom: MeetingRoom) =
         compositeDisposable.add(
-            RestService.fetchMeetingList(meetingRoom.id)
+            RestService.fetchMeetingListByRoom(meetingRoom.id)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     val newMeetingRoomObject = meetingRoom.updateMeetings(it)
@@ -204,7 +203,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.add(
             Observable.interval(period, periodUnit, Schedulers.newThread())
                 .filter { wifiManager.isWifiEnabled }
-                .flatMap { RestService.fetchMeetingList(meetingRoom.id) }
+                .flatMap { RestService.fetchMeetingListByRoom(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     val newMeetingRoomObject = meetingRoom.updateMeetings(it)

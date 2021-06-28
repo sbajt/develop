@@ -1,131 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/refreshView"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/timeView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="-12dp"
+        android:textFontWeight="700"
+        android:textSize="36sp"
+        tools:text="13:37" />
+
+    <TextView
+        android:id="@+id/roomNameView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textFontWeight="700"
+        android:textSize="26sp"
+        tools:text="Test imaginary room" />
 
     <LinearLayout
+        android:id="@+id/ongoingMeetingDescriptionContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="16dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/timeView"
+            android:id="@+id/ongoingMeetingTimeView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="-12dp"
-            android:textFontWeight="700"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textSize="36sp"
-            tools:text="13:37" />
+            tools:text="start time - end time" />
 
         <TextView
-            android:id="@+id/roomNameView"
+            android:id="@+id/ongoingMeetingNameView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="-12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textFontWeight="700"
-            android:textSize="26sp"
-            tools:text="Test imaginary room" />
+            android:textSize="52sp"
+            tools:text="Name" />
+
+        <TextView
+            android:id="@+id/ongoingMeetingDescriptionView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textSize="18sp"
+            tools:text="This is a description. Very accurate. Much words. Such room." />
 
         <LinearLayout
-            android:id="@+id/ongoingMeetingDescriptionContainer"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/currentMeetingTimeView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="-12dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textSize="36sp"
-                tools:text="start time - end time" />
-
-            <TextView
-                android:id="@+id/currentMeetingNameView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="-12dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textFontWeight="700"
-                android:textSize="52sp"
-                tools:text="Name" />
-
-            <TextView
-                android:id="@+id/currentMeetingDescriptionView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textSize="18sp"
-                tools:text="This is a description. Very accurate. Much words. Such room." />
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
+                android:layout_weight="0.8"
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.7"
-                    android:orientation="vertical">
+                    android:text="@string/label_creator_label"
+                    android:textSize="18sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_creator_label"
-                        android:textSize="18sp" />
-
-                    <TextView
-                        android:id="@+id/currentMeetingOrganizerView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textFontWeight="700"
-                        android:textSize="18sp"
-                        tools:text="stanislav.bajt@superology.com" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="0.3"
-                    android:gravity="bottom"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_attendees" />
-
-                    <TextView
-                        android:id="@+id/invitesCountView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginBottom="-4dp"
-                        android:textSize="28sp"
-                        tools:text="6" />
-
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/ongoingMeetingOrganizerView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textFontWeight="700"
+                    android:textSize="18sp"
+                    tools:text="stanislav.bajt@superology.com" />
 
             </LinearLayout>
-        </LinearLayout>
 
-        <TextView
-            android:id="@+id/meetingListStatusLabelView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            tools:text="Up next:" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="0.2"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_attendees" />
+
+                <TextView
+                    android:id="@+id/invitesCountView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="-4dp"
+                    android:textSize="28sp"
+                    tools:text="6" />
+
+            </LinearLayout>
+
+        </LinearLayout>
     </LinearLayout>
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <TextView
+        android:id="@+id/meetingListStatusLabelView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        tools:text="Up next:" />
+</LinearLayout>

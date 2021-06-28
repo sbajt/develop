@@ -21,7 +21,7 @@ class MeetingRoomViewHolder(
         textView.text = meetingRoom.name
         containerView.run {
             isClickable = true
-            background = ContextCompat.getDrawable(context, R.drawable.bg_meeting_room)
+            background = ContextCompat.getDrawable(context, android.R.color.white)
             setOnClickListener {
                 actionListener.onClick(meetingRoom)
                 isClickable = false

@@ -14,6 +14,7 @@ import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import com.scorealarm.meeting.rooms.utils.Utils.filterToday
+import com.scorealarm.meeting.rooms.utils.Utils.filterUpcoming
 import com.scorealarm.meeting.rooms.utils.Utils.setText
 import com.scorealarm.meeting.rooms.utils.Utils.state
 import com.scorealarm.meeting.rooms.utils.Utils.stateText
@@ -96,42 +97,21 @@ class MeetingRoomDescriptionFragment :
                 ongoingMeetingDescriptionContainer?.visibility = View.GONE
             } else {
                 ongoingMeetingDescriptionContainer?.visibility = View.VISIBLE
-                currentMeetingNameView?.text = ongoingMeeting.title
-                currentMeetingDescriptionView?.setText(
+                ongoingMeetingNameView?.text = ongoingMeeting.title
+                ongoingMeetingDescriptionView?.setText(
                     ongoingMeeting,
                     Html.fromHtml(
                         ongoingMeeting.description,
                         Html.FROM_HTML_MODE_COMPACT
                     ).toString()
                 )
-                currentMeetingOrganizerView?.setText(ongoingMeeting, ongoingMeeting.organizer)
+                ongoingMeetingOrganizerView?.setText(ongoingMeeting, ongoingMeeting.organizer)
                 invitesCountView?.setText(ongoingMeeting, ongoingMeeting.invitesNumber?.toString())
-                currentMeetingTimeView?.text = ongoingMeeting.stateText(context, ongoingMeeting)
+                ongoingMeetingTimeView?.text = ongoingMeeting.stateText(context, ongoingMeeting)
             }
         }
-        meetingListStatusLabelView?.styleAndSetText(todayMeetingList)
+        meetingListStatusLabelView?.styleAndSetText(todayMeetingList.filterUpcoming())
         roomNameView?.text = meetingRoom?.name
-        refreshView?.run {
-            if (meetingRoom == null)
-                isEnabled = false
-            else {
-                isEnabled = true
-                setOnRefreshListener {
-                    compositeDisposable.add(
-                        RestService.fetchMeetingList(meetingRoom.id)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe({
-                                val newMeetingRoomObject = meetingRoom.updateMeetings(it)
-                                (activity as MainActivity).run {
-                                    meetingRoomSubject.onNext(newMeetingRoomObject)
-                                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
-                                }
-                                isRefreshing = false
-                            }, { Log.e(TAG, it.toString()) })
-                    )
-                }
-            }
-        }
     }
 
     companion object {

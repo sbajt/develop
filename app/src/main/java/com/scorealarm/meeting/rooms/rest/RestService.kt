@@ -47,7 +47,7 @@ object RestService {
     fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
         api.getMeetingRooms().flatMap { Observable.just(it.rooms) }.subscribeOn(Schedulers.io())
 
-    fun fetchMeetingList(meetingRoomId: String): Observable<List<Meeting>> =
+    fun fetchMeetingListByRoom(meetingRoomId: String): Observable<List<Meeting>> =
         api.getMeetings(meetingRoomId).flatMap { Observable.just(it.events) }
             .subscribeOn(Schedulers.io())
 
