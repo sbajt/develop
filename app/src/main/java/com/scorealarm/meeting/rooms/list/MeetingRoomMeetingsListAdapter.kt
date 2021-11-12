@@ -1,24 +1,24 @@
 package com.scorealarm.meeting.rooms.list
 
-import android.R
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.scorealarm.meeting.rooms.list.viewholders.MeetingRoomViewHolder
-import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.R
+import com.scorealarm.meeting.rooms.list.viewholders.MeetingViewHolder
+import com.scorealarm.meeting.rooms.models.Meeting
 
-class MeetingRoomListAdapter(private val actionListener: ListItemActionListener<*>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MeetingRoomMeetingsListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val items = mutableListOf<MeetingRoom>()
+    private val items = mutableListOf<Meeting>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
-        MeetingRoomViewHolder(
+        MeetingViewHolder(
             LayoutInflater.from(parent.context)
-                .inflate(R.layout.simple_list_item_1, parent, false), actionListener as ListItemActionListener<MeetingRoom>)
+                .inflate(R.layout.item_meeting, parent, false)
+        )
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as MeetingRoomViewHolder).bind(items[position])
+        (holder as MeetingViewHolder).bind(items[position])
     }
 
     override fun getItemViewType(position: Int): Int = 0
@@ -27,12 +27,14 @@ class MeetingRoomListAdapter(private val actionListener: ListItemActionListener<
         items.size
 
     override fun getItemId(position: Int): Long =
-        items[position].id.toLong()
+        items[position].hashCode().toLong()
 
-    fun update(input: List<MeetingRoom>) {
+    fun update(input: List<Meeting>, onEmptyList: () -> Unit = {}) {
         items.clear()
         items.addAll(input)
         notifyDataSetChanged()
+        if (items.isEmpty())
+            onEmptyList.invoke()
     }
 
 }

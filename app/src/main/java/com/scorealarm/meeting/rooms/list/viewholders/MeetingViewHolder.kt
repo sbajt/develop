@@ -8,7 +8,7 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.utils.Utils.state
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.item_meeting_list.*
+import kotlinx.android.synthetic.main.item_meeting.*
 
 class MeetingViewHolder(
     override val containerView: View,
@@ -30,8 +30,6 @@ class MeetingViewHolder(
                                         .toString()
                                 )
                             }"
-                meetingDescriptionView?.text =
-                    Html.fromHtml(meeting.description, Html.FROM_HTML_MODE_COMPACT)
                 meetingNameView?.text = title
                 meetingOrganizerView?.text = organizer
                 invitesCountView?.text = invitesNumber.toString()

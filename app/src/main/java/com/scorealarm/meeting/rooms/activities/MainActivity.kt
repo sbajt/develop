@@ -6,17 +6,14 @@ import android.net.Network
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.util.Log
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.commit
-import androidx.fragment.app.replace
 import androidx.startup.AppInitializer
 import com.google.android.material.snackbar.Snackbar
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
-import com.scorealarm.meeting.rooms.fragments.MeetingListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
-import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
+import com.scorealarm.meeting.rooms.fragments.MeetingRoomMeetingsListFragment
+import com.scorealarm.meeting.rooms.fragments.MeetingRoomsListFragment
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import com.scorealarm.meeting.rooms.utils.Utils.updateMeetings
@@ -38,11 +35,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val connectivityManager: ConnectivityManager by lazy { getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager }
     private val compositeDisposable = CompositeDisposable()
 
-    var meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom?>(1)
+    val meetingRoomSubject = ReplaySubject.createWithSize<MeetingRoom?>(1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         AppInitializer.getInstance(this).initializeComponent(JodaTimeInitializer::class.java)
     }
 
@@ -56,7 +52,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             MeetingRoom::class.java
         )
         if (meetingRoom == null) {
-            showMeetingRoomListFragment()
+            showMeetingRoomsListFragment()
         } else {
             refreshMeetingRoomSubjectOnDayChange(meetingRoom)
             updateMeetingListInMeetingRoomByPeriod(
@@ -64,12 +60,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Config.MEETING_LIST_REFRESH_RATE_IN_SECONDS,
                 TimeUnit.SECONDS
             )
-            if (!meetingRoom.meetingList.isNullOrEmpty()) {
-                showMeetingListFragment()
-            }
-
             meetingRoomSubject.onNext(meetingRoom)
             showMeetingRoomDescriptionFragment()
+            showMeetingRoomMeetingsListFragment()
         }
     }
 
@@ -78,32 +71,29 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         compositeDisposable.dispose()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.removePersistedData -> {
-                removePersistedMeetingRoom()
-                meetingRoomSubject = ReplaySubject.createWithSize(1)
-                showMeetingRoomListFragment()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     fun onSelectMeetingRoom(meetingRoom: MeetingRoom) =
         compositeDisposable.add(
             RestService.fetchMeetingListByRoom(meetingRoom.id)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val newMeetingRoomObject = meetingRoom.updateMeetings(it)
-                    meetingRoomSubject.onNext(newMeetingRoomObject)
-                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                    removeMeetingRoomsListFragment()
                     showMeetingRoomDescriptionFragment()
-                    showMeetingListFragment()
+                    showMeetingRoomMeetingsListFragment()
+                    val newMeetingRoomObject = meetingRoom.updateMeetings(it)
+                    saveMeetingRoomIntoPreference(newMeetingRoomObject)
+                    meetingRoomSubject.onNext(newMeetingRoomObject)
                 }, { Log.e(TAG, it.toString()) })
         )
 
-    fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) =
+    fun doOnClearViewClick() {
+        removePersistedMeetingRoom()
+        removeMeetingRoomDescriptionFragment()
+        removeMeetingRoomMeetingsListFragment()
+        meetingRoomSubject.cleanupBuffer()
+        showMeetingRoomsListFragment()
+    }
+
+    private fun saveMeetingRoomIntoPreference(meetingRoom: MeetingRoom) =
         getPreferences(Context.MODE_PRIVATE)?.edit()
             ?.putString(meetingRoomKey, RestService.gson.toJson(meetingRoom))
             ?.apply()
@@ -130,49 +120,61 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         })
     }
 
-    private fun showMeetingRoomDescriptionFragment() {
-        removeMeetingRoomListFragment()
-        supportFragmentManager.commit {
-            replace<MeetingRoomDescriptionFragment>(
-                R.id.meetingRoomDescriptionContainer,
-                getString(R.string.meeting_description_fragment_tag)
-            )
-        }
-    }
-
-    private fun showMeetingListFragment() {
-        removeMeetingRoomListFragment()
-        supportFragmentManager.commit {
-            replace<MeetingListFragment>(
-                R.id.meetingListContainer,
-                getString(R.string.meeting_list_fragment_tag)
-            )
-        }
-    }
-
-    private fun showMeetingRoomListFragment() {
-        val meetingListFragment =
-            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_list_fragment_tag))
-        val meetingDescriptionFragment =
-            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_description_fragment_tag))
-        supportFragmentManager.commit {
-            if (meetingDescriptionFragment != null)
-                detach(meetingDescriptionFragment)
-            if (meetingListFragment != null)
-                detach(meetingListFragment)
-
-            replace<MeetingRoomListFragment>(
+    private fun showMeetingRoomsListFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(
                 R.id.containerView,
-                getString(R.string.meeting_room_list_fragment_tag)
+                MeetingRoomsListFragment(),
+                getString(R.string.meeting_rooms_list_fragment_tag)
             )
-        }
+            .commit()
     }
 
-    private fun removeMeetingRoomListFragment() {
+    private fun removeMeetingRoomsListFragment() {
         val meetingRoomListFragment =
-            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_list_fragment_tag))
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_rooms_list_fragment_tag))
         if (meetingRoomListFragment != null)
-            supportFragmentManager.commit { detach(meetingRoomListFragment) }
+            supportFragmentManager.beginTransaction()
+                .detach(meetingRoomListFragment)
+                .commit()
+    }
+
+    private fun showMeetingRoomDescriptionFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.meetingRoomDescriptionContainer,
+                MeetingRoomDescriptionFragment(),
+                getString(R.string.meeting_room_description_fragment_tag)
+            )
+            .commit()
+    }
+
+    private fun removeMeetingRoomDescriptionFragment() {
+        val meetingRoomMeetingsListFragment =
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_description_fragment_tag))
+        if (meetingRoomMeetingsListFragment != null)
+            supportFragmentManager.beginTransaction()
+                .detach(meetingRoomMeetingsListFragment)
+                .commit()
+    }
+
+    private fun showMeetingRoomMeetingsListFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.meetingRoomMeetingsListContainer,
+                MeetingRoomMeetingsListFragment(),
+                getString(R.string.meeting_rooms_list_fragment_tag)
+            )
+            .commit()
+    }
+
+    private fun removeMeetingRoomMeetingsListFragment() {
+        val meetingRoomMeetingsListFragment =
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_meetings_list_fragment_tag))
+        if (meetingRoomMeetingsListFragment != null)
+            supportFragmentManager.beginTransaction()
+                .detach(meetingRoomMeetingsListFragment)
+                .commit()
     }
 
     private fun removePersistedMeetingRoom() =
