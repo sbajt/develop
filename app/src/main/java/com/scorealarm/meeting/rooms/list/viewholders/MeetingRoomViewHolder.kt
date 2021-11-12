@@ -10,16 +10,15 @@ import com.scorealarm.meeting.rooms.models.MeetingRoom
 import kotlinx.android.extensions.LayoutContainer
 
 class MeetingRoomViewHolder(
-    override val containerView: View,
+    containerView: View,
     private val actionListener: ListItemActionListener<MeetingRoom>
-) : RecyclerView.ViewHolder(containerView),
-    LayoutContainer {
+) : RecyclerView.ViewHolder(containerView){
 
     private val textView: TextView = containerView.findViewById(android.R.id.text1)
 
     fun bind(meetingRoom: MeetingRoom) {
         textView.text = meetingRoom.name
-        containerView.run {
+        itemView.run {
             isClickable = true
             background = ContextCompat.getDrawable(context, android.R.color.white)
             setOnClickListener {

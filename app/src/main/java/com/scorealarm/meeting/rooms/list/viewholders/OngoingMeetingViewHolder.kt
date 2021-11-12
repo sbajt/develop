@@ -9,7 +9,7 @@ import com.scorealarm.meeting.rooms.utils.Utils.state
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.item_ongoing_meeting.*
 
-class MeetingViewHolder(
+class OngoingMeetingViewHolder(
     override val containerView: View,
 ) : RecyclerView.ViewHolder(containerView),
     LayoutContainer {

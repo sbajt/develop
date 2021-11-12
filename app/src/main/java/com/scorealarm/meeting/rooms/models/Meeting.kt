@@ -1,9 +1,12 @@
 package com.scorealarm.meeting.rooms.models
 
 import com.google.gson.annotations.SerializedName
+import com.scorealarm.meeting.rooms.list.MeetingRoomMeetingsListAdapter
 import org.joda.time.DateTime
 
 data class Meeting(
+    val type: MeetingRoomMeetingsListAdapter.ViewType = MeetingRoomMeetingsListAdapter.ViewType.MEETING,
+
     @SerializedName("summary")
     val title: String?,
 

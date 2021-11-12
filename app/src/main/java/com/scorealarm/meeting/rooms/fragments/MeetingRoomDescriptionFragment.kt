@@ -22,7 +22,6 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     override fun onStart() {
         super.onStart()
-        runClock()
         observeMeetingRoomSubject()
     }
 
@@ -57,6 +56,7 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
     }
 
     private fun bindViews(meetingRoom: MeetingRoom?) {
+        runClock()
         clearView?.setOnClickListener { (activity as MainActivity).doOnClearViewClick() }
         roomNameView?.text = meetingRoom?.name
     }

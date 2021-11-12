@@ -15,19 +15,19 @@ class MeetingRoomsListAdapter(private val actionListener: ListItemActionListener
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
         MeetingRoomViewHolder(
             LayoutInflater.from(parent.context)
-                .inflate(R.layout.simple_list_item_1, parent, false), actionListener as ListItemActionListener<MeetingRoom>)
+                .inflate(R.layout.simple_list_item_1, parent, false),
+            actionListener as ListItemActionListener<MeetingRoom>
+        )
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         (holder as MeetingRoomViewHolder).bind(items[position])
     }
 
-    override fun getItemViewType(position: Int): Int = 0
+    override fun getItemViewType(position: Int) = 0
 
-    override fun getItemCount(): Int =
-        items.size
+    override fun getItemCount(): Int = items.size
 
-    override fun getItemId(position: Int): Long =
-        items[position].id.toLong()
+    override fun getItemId(position: Int): Long = items[position].id.toLong()
 
     fun update(input: List<MeetingRoom>) {
         items.clear()

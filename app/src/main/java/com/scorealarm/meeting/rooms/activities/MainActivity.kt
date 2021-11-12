@@ -14,6 +14,7 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomMeetingsListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomsListFragment
+import com.scorealarm.meeting.rooms.list.MeetingRoomMeetingsListAdapter
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import com.scorealarm.meeting.rooms.utils.Utils.updateMeetings
