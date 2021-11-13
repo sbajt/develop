@@ -47,12 +47,10 @@ class MeetingRoomMeetingsListAdapter : RecyclerView.Adapter<RecyclerView.ViewHol
 
     override fun getItemId(position: Int): Long = items[position].hashCode().toLong()
 
-    fun update(input: List<MeetingItemViewModel>, onEmptyList: () -> Unit = {}) {
+    fun update(input: List<MeetingItemViewModel>) {
         items.clear()
         items.addAll(input)
         notifyDataSetChanged()
-        if (items.isEmpty())
-            onEmptyList.invoke()
     }
 
 }

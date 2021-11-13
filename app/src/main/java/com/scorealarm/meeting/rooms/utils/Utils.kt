@@ -35,12 +35,11 @@ object Utils {
 
     fun List<Meeting>?.mapToMeetingItemViewModelList(): List<MeetingItemViewModel> {
         val list = this.filterUpcoming()
-        when {
+        return when {
             list.any { it.state() == MeetingStateType.ONGOING } -> list + createMeetingsCountItemViewModel(list.size)
             list.any { it.state() != MeetingStateType.ONGOING } -> listOf(createMeetingsCountItemViewModel(list.size)) + list
             else -> listOf(createMeetingsCountItemViewModel(0))
         }
-        return list
     }
 
     private fun List<Meeting>?.filterUpcoming(): List<MeetingItemViewModel> {
