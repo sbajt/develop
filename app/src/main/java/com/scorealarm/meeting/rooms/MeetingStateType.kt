@@ -1,5 +1,5 @@
 package com.scorealarm.meeting.rooms
 
 enum class MeetingStateType {
-    INCLUDED, EXCLUDED, ALL_DAY, ONGOING
+    EXCLUDED, INCLUDED, ALL_DAY, ONGOING, UPCOMING
 }

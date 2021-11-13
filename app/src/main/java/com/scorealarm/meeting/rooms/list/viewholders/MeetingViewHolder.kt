@@ -14,8 +14,8 @@ class MeetingViewHolder(
 ) : RecyclerView.ViewHolder(containerView),
     LayoutContainer {
 
-    fun bind(meeting: Meeting) {
-        meeting.run {
+    fun bind(meeting: Meeting?) {
+        meeting?.run {
             if (meeting.state() != MeetingStateType.EXCLUDED) {
                 if (meeting.state() == MeetingStateType.ALL_DAY)
                     timeView?.text = itemView.context.getText(R.string.meeting_state_all_day)

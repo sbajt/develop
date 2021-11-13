@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.list.MeetingRoomMeetingsListAdapter
-import com.scorealarm.meeting.rooms.utils.Utils.filterUpcoming
+import com.scorealarm.meeting.rooms.utils.Utils.mapToMeetingItemViewModelList
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -34,7 +34,7 @@ class MeetingRoomMeetingsListFragment : Fragment(R.layout.fragment_list) {
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    listAdapter.update(it.meetingList.filterUpcoming())
+                    listAdapter.update(it.meetingList.mapToMeetingItemViewModelList())
                 }) { Log.d(TAG, it.toString()) }
         )
     }

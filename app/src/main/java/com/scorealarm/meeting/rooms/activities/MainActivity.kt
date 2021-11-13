@@ -14,10 +14,9 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomMeetingsListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomsListFragment
-import com.scorealarm.meeting.rooms.list.MeetingRoomMeetingsListAdapter
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
-import com.scorealarm.meeting.rooms.utils.Utils.updateMeetings
+import com.scorealarm.meeting.rooms.utils.Utils.updateMeetingsListForRoom
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -61,9 +60,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Config.MEETING_LIST_REFRESH_RATE_IN_SECONDS,
                 TimeUnit.SECONDS
             )
-            meetingRoomSubject.onNext(meetingRoom)
             showMeetingRoomDescriptionFragment()
             showMeetingRoomMeetingsListFragment()
+            meetingRoomSubject.onNext(meetingRoom)
         }
     }
 
@@ -80,13 +79,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     removeMeetingRoomsListFragment()
                     showMeetingRoomDescriptionFragment()
                     showMeetingRoomMeetingsListFragment()
-                    val newMeetingRoomObject = meetingRoom.updateMeetings(it)
+                    val newMeetingRoomObject = meetingRoom.updateMeetingsListForRoom(it)
                     saveMeetingRoomIntoPreference(newMeetingRoomObject)
                     meetingRoomSubject.onNext(newMeetingRoomObject)
                 }, { Log.e(TAG, it.toString()) })
         )
 
-    fun doOnClearViewClick() {
+    fun onClearViewClick() {
         removePersistedMeetingRoom()
         removeMeetingRoomDescriptionFragment()
         removeMeetingRoomMeetingsListFragment()
@@ -209,7 +208,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .flatMap { RestService.fetchMeetingListByRoom(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    val newMeetingRoomObject = meetingRoom.updateMeetings(it)
+                    val newMeetingRoomObject = meetingRoom.updateMeetingsListForRoom(it)
                     if (it.isNotEmpty())
                         saveMeetingRoomIntoPreference(newMeetingRoomObject)
                     meetingRoomSubject.onNext(newMeetingRoomObject)

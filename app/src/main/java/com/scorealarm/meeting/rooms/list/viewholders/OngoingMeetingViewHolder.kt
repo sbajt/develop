@@ -14,24 +14,20 @@ class OngoingMeetingViewHolder(
 ) : RecyclerView.ViewHolder(containerView),
     LayoutContainer {
 
-    fun bind(meeting: Meeting) {
-        meeting.run {
-            if (meeting.state() != MeetingStateType.EXCLUDED) {
-                if (meeting.state() == MeetingStateType.ALL_DAY)
-                    timeView?.text = itemView.context.getText(R.string.meeting_state_all_day)
-                else
-                    timeView?.text = meeting.startDateTime.toString(
-                        itemView.context.getText(R.string.meeting_time_format).toString()) +
-                            " - ${meeting.endDateTime.toString(itemView.context.getText(R.string.meeting_time_format).toString())}"
-                meetingNameView?.text = title
-                meetingOrganizerView?.text = organizer
-                invitesCountView?.text = invitesNumber.toString()
-            } else {
-                timeView?.text = ""
-                meetingNameView?.text = ""
-                meetingOrganizerView?.text = ""
-                invitesCountView?.text = ""
-            }
+    fun bind(meeting: Meeting?) {
+        meeting?.run {
+            if (meeting.state() == MeetingStateType.ALL_DAY)
+                timeView?.text = itemView.context.getText(R.string.meeting_state_all_day)
+            else
+                timeView?.text =
+                    itemView.context.getString(
+                        R.string.label_meeting_time,
+                        meeting.startDateTime.toString(itemView.context.getString(R.string.meeting_time_format)),
+                        meeting.endDateTime.toString(itemView.context.getString(R.string.format_date_time_meeting))
+                    )
+            meetingNameView?.text = title
+            meetingOrganizerView?.text = organizer
+            invitesCountView?.text = invitesNumber.toString()
         }
     }
 }

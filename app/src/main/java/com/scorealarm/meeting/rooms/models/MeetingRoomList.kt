@@ -1,5 +1,5 @@
 package com.scorealarm.meeting.rooms.models
 
-data class MeetingRoomListWrapper(
+data class MeetingRoomList(
     val rooms: List<MeetingRoom>
 )

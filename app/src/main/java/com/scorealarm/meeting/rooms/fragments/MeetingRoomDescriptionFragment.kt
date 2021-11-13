@@ -1,7 +1,6 @@
 package com.scorealarm.meeting.rooms.fragments
 
 import android.util.Log
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
@@ -11,7 +10,6 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
 
@@ -57,7 +55,7 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     private fun bindViews(meetingRoom: MeetingRoom?) {
         runClock()
-        clearView?.setOnClickListener { (activity as MainActivity).doOnClearViewClick() }
+        clearView?.setOnClickListener { (activity as MainActivity).onClearViewClick() }
         roomNameView?.text = meetingRoom?.name
     }
 
