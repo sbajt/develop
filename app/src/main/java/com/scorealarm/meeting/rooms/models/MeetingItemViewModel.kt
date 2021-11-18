@@ -1,9 +1,8 @@
 package com.scorealarm.meeting.rooms.models
 
-import com.scorealarm.meeting.rooms.list.MeetingRoomMeetingsListAdapter
+import com.scorealarm.meeting.rooms.models.types.MeetingStateType
 
 data class MeetingItemViewModel(
-    val type: MeetingRoomMeetingsListAdapter.ViewType,
+    val type: MeetingStateType,
     val meeting: Meeting? = null,
-    val meetingCount: Int
 )

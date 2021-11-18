@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.fragment_meeting_room_description.*
 import org.joda.time.DateTime
 
 
-class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_description) {
+class MeetingRoomTitleFragment : Fragment(R.layout.fragment_meeting_room_description) {
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -61,7 +61,7 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     companion object {
 
-        private val TAG = MeetingRoomDescriptionFragment::class.java.canonicalName
+        private val TAG = MeetingRoomTitleFragment::class.java.canonicalName
 
     }
 

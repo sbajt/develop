@@ -3,6 +3,7 @@ package com.scorealarm.meeting.rooms.fragments
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.View
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
@@ -23,6 +24,7 @@ class MeetingRoomsListFragment : Fragment(R.layout.fragment_list),
 
     override fun onStart() {
         super.onStart()
+        textView?.visibility = View.GONE
         recyclerView?.adapter = listAdapter
         compositeDisposable.add(
             RestService.fetchMeetingRoomList()

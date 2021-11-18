@@ -6,14 +6,19 @@
     android:layout_height="match_parent"
     android:background="@android:color/white"
     android:keepScreenOn="true"
-    android:orientation="vertical"
-    android:paddingHorizontal="12dp">
+    android:orientation="vertical">
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/meetingRoomDescriptionContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:layout="@layout/fragment_meeting_room_description" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/ongoingMeetingContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout="@layout/fragment_ongoing_meeting" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/meetingRoomMeetingsListContainer"
