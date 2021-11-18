@@ -44,11 +44,11 @@ object RestService {
         .build()
         .create(MeetingRoomApi::class.java)
 
-    fun fetchMeetingRoomList(): Observable<List<MeetingRoom>> =
-        api.getMeetingRooms().flatMap { Observable.just(it.rooms) }.subscribeOn(Schedulers.io())
+    fun getMeetingRoomList(): Observable<List<MeetingRoom>> =
+        api.getMeetingRoomList().flatMap { Observable.fromArray(it.meetingRoomList) }.subscribeOn(Schedulers.io())
 
-    fun fetchMeetingListByRoom(meetingRoomId: String): Observable<List<Meeting>> =
-        api.getMeetings(meetingRoomId).flatMap { Observable.just(it.events) }
+    fun getMeetingListByRoom(meetingRoomId: String): Observable<List<Meeting>> =
+        api.getMeetingsByRoom(meetingRoomId).flatMap { Observable.fromArray(it.meetingList) }
             .subscribeOn(Schedulers.io())
 
 

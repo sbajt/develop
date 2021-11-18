@@ -5,7 +5,8 @@ import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
-import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.fragments.models.MeetingRoomDescriptionViewModel
+import com.scorealarm.meeting.rooms.utils.Utils
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -20,11 +21,13 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
 
     override fun onStart() {
         super.onStart()
+        isAlive = true
         observeMeetingRoomSubject()
     }
 
     override fun onStop() {
         super.onStop()
+        isAlive = false
         compositeDisposable.dispose()
     }
 
@@ -47,21 +50,24 @@ class MeetingRoomDescriptionFragment : Fragment(R.layout.fragment_meeting_room_d
     private fun observeMeetingRoomSubject() {
         compositeDisposable.add(
             (activity as MainActivity).meetingRoomSubject
+                .map { Utils.createMeetingRoomDescriptionViewModel(it) }
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(::bindViews) { Log.e(TAG, it.toString()) }
+                .subscribe(::bind) { Log.e(TAG, it.toString()) }
         )
     }
 
-    private fun bindViews(meetingRoom: MeetingRoom?) {
+    private fun bind(meetingRoomDescriptionViewModel: MeetingRoomDescriptionViewModel?) {
         runClock()
         clearView?.setOnClickListener { (activity as MainActivity).onClearViewClick() }
-        roomNameView?.text = meetingRoom?.name
+        roomNameView?.text = meetingRoomDescriptionViewModel?.meeting?.name
     }
 
     companion object {
 
         private val TAG = MeetingRoomDescriptionFragment::class.java.canonicalName
+
+        var isAlive = false
 
     }
 

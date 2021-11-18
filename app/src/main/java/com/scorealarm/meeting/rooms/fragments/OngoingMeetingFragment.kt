@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
-import com.scorealarm.meeting.rooms.models.OngoingMeetingViewModel
+import com.scorealarm.meeting.rooms.fragments.models.OngoingMeetingViewModel
 import com.scorealarm.meeting.rooms.utils.Utils
 import com.scorealarm.meeting.rooms.utils.Utils.getOngoingMeeting
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -13,17 +13,19 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_ongoing_meeting.*
 
 
-class OngoingMeetingFragment : Fragment(R.layout.fragment_meeting_room_description) {
+class OngoingMeetingFragment : Fragment(R.layout.fragment_ongoing_meeting) {
 
     private val compositeDisposable = CompositeDisposable()
 
     override fun onStart() {
         super.onStart()
+        isAlive = true
         observeMeetingRoomSubject()
     }
 
     override fun onStop() {
         super.onStop()
+        isAlive = false
         compositeDisposable.dispose()
     }
 
@@ -61,6 +63,8 @@ class OngoingMeetingFragment : Fragment(R.layout.fragment_meeting_room_descripti
     companion object {
 
         private val TAG = OngoingMeetingFragment::class.java.canonicalName
+
+        var isAlive = false
 
     }
 
