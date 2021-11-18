@@ -2,9 +2,9 @@
     <string name="app_name">Meeting Rooms</string>
 
     <string name="meeting_room_meetings_list_fragment_tag">MeetingRoomMeetingsListFragment</string>
-    <string name="meeting_room_title_fragment_tag">MeetingRoomTitleFragment</string>
-    <string name="meeting_rooms_list_fragment_tag">MeetingRoomsListFragment</string>
-    <string name="ongoing_meeting_fragment_tag">MeetingRoomsListFragment</string>
+    <string name="meeting_room_description_fragment_tag">MeetingRoomDescriptionFragment</string>
+    <string name="meeting_room_list_fragment_tag">MeetingRoomListFragment</string>
+    <string name="ongoing_meeting_fragment_tag">OngoingMeetingFragment</string>
 
     <string name="meeting_state_all_day">All day</string>
     <string name="meeting_time_format">HH:mm</string>

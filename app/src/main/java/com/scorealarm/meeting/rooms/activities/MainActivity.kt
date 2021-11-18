@@ -11,10 +11,9 @@ import androidx.startup.AppInitializer
 import com.google.android.material.snackbar.Snackbar
 import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
-import com.scorealarm.meeting.rooms.fragments.MeetingRoomTitleFragment
+import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomMeetingsListFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomsListFragment
-import com.scorealarm.meeting.rooms.fragments.OngoingMeetingFragment
 import com.scorealarm.meeting.rooms.models.MeetingRoom
 import com.scorealarm.meeting.rooms.rest.RestService
 import io.reactivex.Observable
@@ -52,7 +51,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             MeetingRoom::class.java
         )
         if (meetingRoom == null) {
-            showMeetingRoomsListFragment()
+            showMeetingRoomListFragment()
         } else {
             refreshMeetingRoomSubjectOnDayChange(meetingRoom)
             updateMeetingListInMeetingRoomByPeriod(
@@ -65,7 +64,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     meetingRoomSubject.onNext(meetingRoom.copy(meetingList = it))
-                    showMeetingRoomTextFragment()
+                    showMeetingRoomDescriptionFragment()
                     showOngoingMeetingFragment()
                     showMeetingRoomMeetingsListFragment()
                 }) { Log.e(TAG, it.toString()) })
@@ -82,8 +81,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             RestService.fetchMeetingListByRoom(meetingRoom.id)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    removeMeetingRoomsListFragment()
-                    showMeetingRoomTextFragment()
+                    removeMeetingRoomListFragment()
                     showOngoingMeetingFragment()
                     showMeetingRoomMeetingsListFragment()
                     meetingRoomSubject.onNext(meetingRoom.copy(meetingList = it))
@@ -91,11 +89,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         )
 
     fun onClearViewClick() {
-        removeMeetingRoomDescriptionFragment()
+        removeMeetingRoomDescriptionsFragment()
         removeOngoingMeetingFragment()
         removeMeetingRoomMeetingsListFragment()
         meetingRoomSubject.cleanupBuffer()
-        showMeetingRoomsListFragment()
+        showMeetingRoomListFragment()
     }
 
     private fun persistMeetingRoom(meetingRoom: MeetingRoom) =
@@ -125,60 +123,60 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         })
     }
 
-    private fun showMeetingRoomsListFragment() {
+    private fun showMeetingRoomListFragment() {
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.containerView,
                 MeetingRoomsListFragment(),
-                getString(R.string.meeting_rooms_list_fragment_tag)
+                getString(R.string.meeting_room_list_fragment_tag)
             )
             .commit()
     }
 
-    private fun removeMeetingRoomsListFragment() {
+    private fun removeMeetingRoomListFragment() {
         val meetingRoomListFragment =
-            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_rooms_list_fragment_tag))
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_list_fragment_tag))
         if (meetingRoomListFragment != null)
             supportFragmentManager.beginTransaction()
                 .detach(meetingRoomListFragment)
                 .commit()
     }
 
-    private fun showMeetingRoomTextFragment() {
-        supportFragmentManager.beginTransaction()
-            .replace(
-                R.id.meetingRoomDescriptionContainer,
-                MeetingRoomTitleFragment(),
-                getString(R.string.meeting_room_title_fragment_tag)
-            )
-            .commit()
+    private fun showMeetingRoomDescriptionFragment() {
+            supportFragmentManager.beginTransaction()
+                .replace(
+                    R.id.meetingRoomDescriptionContainer,
+                    MeetingRoomsListFragment(),
+                    getString(R.string.meeting_room_description_fragment_tag)
+                )
+                .commit()
     }
 
-    private fun removeMeetingRoomDescriptionFragment() {
-        val meetingRoomMeetingsListFragment =
-            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_title_fragment_tag))
-        if (meetingRoomMeetingsListFragment != null)
+    private fun removeMeetingRoomDescriptionsFragment() {
+        val meetingRoomDescriptionFragment =
+            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_description_fragment_tag))
+        if (meetingRoomDescriptionFragment != null)
             supportFragmentManager.beginTransaction()
-                .detach(meetingRoomMeetingsListFragment)
+                .detach(meetingRoomDescriptionFragment)
                 .commit()
     }
 
     private fun showOngoingMeetingFragment() {
         supportFragmentManager.beginTransaction()
             .replace(
-                R.id.meetingRoomDescriptionContainer,
-                MeetingRoomTitleFragment(),
-                getString(R.string.meeting_room_title_fragment_tag)
+                R.id.ongoingMeetingContainer,
+                MeetingRoomDescriptionFragment(),
+                getString(R.string.ongoing_meeting_fragment_tag)
             )
             .commit()
     }
 
     private fun removeOngoingMeetingFragment() {
-        val meetingRoomMeetingsListFragment =
-            supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_title_fragment_tag))
-        if (meetingRoomMeetingsListFragment != null)
+        val ongoingMeetingFragment =
+            supportFragmentManager.findFragmentByTag(getString(R.string.ongoing_meeting_fragment_tag))
+        if (ongoingMeetingFragment != null)
             supportFragmentManager.beginTransaction()
-                .detach(meetingRoomMeetingsListFragment)
+                .detach(ongoingMeetingFragment)
                 .commit()
     }
 
@@ -187,7 +185,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .replace(
                 R.id.meetingRoomMeetingsListContainer,
                 MeetingRoomMeetingsListFragment(),
-                getString(R.string.meeting_rooms_list_fragment_tag)
+                getString(R.string.meeting_room_list_fragment_tag)
             )
             .commit()
     }
@@ -230,7 +228,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     if (it.isNotEmpty())
                         persistMeetingRoom(newMeetingRoomObject)
                     meetingRoomSubject.onNext(newMeetingRoomObject)
-                    showMeetingRoomTextFragment()
                 }) { Log.e(TAG, it.toString()) }
         )
 
