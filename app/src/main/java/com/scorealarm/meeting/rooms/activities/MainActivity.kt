@@ -13,7 +13,7 @@ import com.scorealarm.meeting.rooms.Config
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomDescriptionFragment
 import com.scorealarm.meeting.rooms.fragments.MeetingRoomListFragment
-import com.scorealarm.meeting.rooms.fragments.MeetingRoomMeetingsListFragment
+import com.scorealarm.meeting.rooms.fragments.MeetingsListFragment
 import com.scorealarm.meeting.rooms.fragments.OngoingMeetingFragment
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
@@ -204,7 +204,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.listFragmentContainer,
-                MeetingRoomMeetingsListFragment(),
+                MeetingsListFragment(),
                 getString(R.string.meeting_room_list_fragment_tag)
             )
             .commit()
@@ -268,7 +268,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             showMeetingRoomDescriptionFragment()
         if (meetingList.getOngoingMeeting() != null && !OngoingMeetingFragment.isAlive)
             showOngoingMeetingFragment()
-        if (!MeetingRoomMeetingsListFragment.isAlive)
+        if (!MeetingsListFragment.isAlive)
             showMeetingRoomMeetingsListFragment()
     }
 

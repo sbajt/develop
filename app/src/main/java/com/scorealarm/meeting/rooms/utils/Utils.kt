@@ -2,14 +2,13 @@ package com.scorealarm.meeting.rooms.utils
 
 import android.content.Context
 import com.scorealarm.meeting.rooms.R
+import com.scorealarm.meeting.rooms.fragments.models.MeetingListViewModel
 import com.scorealarm.meeting.rooms.fragments.models.MeetingRoomDescriptionViewModel
 import com.scorealarm.meeting.rooms.fragments.models.MeetingRoomListViewModel
-import com.scorealarm.meeting.rooms.fragments.models.MeetingRoomMeetingListViewModel
 import com.scorealarm.meeting.rooms.fragments.models.OngoingMeetingViewModel
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingItemViewModel
 import com.scorealarm.meeting.rooms.models.MeetingRoom
-import com.scorealarm.meeting.rooms.models.types.LabelType
 import com.scorealarm.meeting.rooms.models.types.MeetingStateType
 import org.joda.time.DateTime
 import org.joda.time.Interval
@@ -19,11 +18,6 @@ import org.joda.time.Period
 object Utils {
 
     private val TAG = Utils::class.java.canonicalName
-
-    fun createMeetingRoomListViewModel(meetingRooms: List<MeetingRoom>?): MeetingRoomListViewModel =
-        MeetingRoomListViewModel(
-            meetingRoomList = meetingRooms ?: emptyList()
-        )
 
     fun createMeetingRoomDescriptionViewModel(meetingRoom: MeetingRoom): MeetingRoomDescriptionViewModel =
         MeetingRoomDescriptionViewModel(meetingRoom)
@@ -44,18 +38,35 @@ object Utils {
                 )
         )
 
-    fun createMeetingsItemViewModelList(meetingList: List<Meeting>?): MeetingRoomMeetingListViewModel {
+    fun createMeetingRoomListViewModel(meetingRooms: List<MeetingRoom>?): MeetingRoomListViewModel =
+        MeetingRoomListViewModel(
+            meetingRoomList = meetingRooms ?: emptyList()
+        )
+
+    fun createMeetingListItemViewModel(
+        context: Context?,
+        meetingList: List<Meeting>?
+    ): MeetingListViewModel {
         val meetingList =
-            meetingList?.filter { it.state() != MeetingStateType.ONGOING || it.state() != MeetingStateType.ALL_DAY }
-        return MeetingRoomMeetingListViewModel(
+            meetingList?.filter { it.state() == MeetingStateType.UPCOMING }
+        return MeetingListViewModel(
             meetingList = meetingList,
-            labelType = meetingList.labelType()
+            labelData = meetingList.getLabelData(context, meetingList?.getOngoingMeeting() != null),
         )
     }
 
+    fun mapToMeetingItemViewModel(meetings: List<Meeting>?): List<MeetingItemViewModel> =
+        meetings?.filter { it.startDateTime.isAfterNow }
+            ?.map {
+                MeetingItemViewModel(
+                    type = it.state(),
+                    meeting = it
+                )
+            } ?: emptyList()
+
+
     fun List<Meeting>?.getOngoingMeeting(): Meeting? =
         this?.find { it.state() == MeetingStateType.ONGOING || it.state() == MeetingStateType.ALL_DAY }
-
 
     fun List<Meeting>?.updateMeetingRoom(meetingRoom: MeetingRoom): MeetingRoom =
         meetingRoom.copy(meetingList = this)
@@ -71,22 +82,26 @@ object Utils {
             )
     }
 
-    fun LabelType?.labelTypeToLabel(context: Context?) =
-        when (this) {
-            LabelType.NONE_UPCOMING -> context?.getString(R.string.label_meetings_no_today)
-            LabelType.NONE_TODAY -> context?.getString(R.string.label_meetings_no_next)
-            LabelType.HAS_UPCOMING -> context?.getString(R.string.label_meetings_next)
-            else -> context?.getString(R.string.label_meetings_no_today)
-        }
 
-    fun mapToMeetingItemViewModel(meetings: List<Meeting>?): List<MeetingItemViewModel> =
-        meetings?.filter { it.startDateTime.isAfterNow }
-            ?.map {
-                MeetingItemViewModel(
-                    type = it.state(),
-                    meeting = it
-                )
-            } ?: emptyList()
+    private fun List<Meeting>?.getLabelData(
+        context: Context?,
+        hasOngoing: Boolean?
+    ): Pair<String?, Int?> =
+        when {
+            this.isNullOrEmpty() -> Pair(
+                context?.getString(R.string.label_meetings_no_today),
+                R.style.textAppearanceMeetingCountBold
+            )
+            this.size == 1 && hasOngoing == true -> Pair(
+                context?.getString(R.string.label_meetings_no_next),
+                R.style.textAppearanceMeetingCountBold
+            )
+            this.size == 1 && hasOngoing == false || this.size > 1 -> Pair(
+                context?.getString(R.string.label_meetings_next),
+                R.style.textAppearanceMeetingCountNormal
+            )
+            else -> Pair(null, null)
+        }
 
     private fun Meeting?.state(): MeetingStateType =
         when {
@@ -111,15 +126,6 @@ object Utils {
             else -> MeetingStateType.EXCLUDED
         }
 
-    private fun List<Meeting>?.labelType() =
-        if (this.isNullOrEmpty())
-            LabelType.NONE_TODAY
-        else if (this.any { it.state() == MeetingStateType.UPCOMING })
-            LabelType.HAS_UPCOMING
-        else if (this.size == 1)
-            LabelType.NONE_UPCOMING
-        else
-            LabelType.NONE_TODAY
 
 }
 
