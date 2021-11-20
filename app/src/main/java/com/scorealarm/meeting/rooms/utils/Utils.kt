@@ -19,6 +19,22 @@ object Utils {
 
     private val TAG = Utils::class.java.canonicalName
 
+    fun Meeting?.state(): MeetingStateType =
+        this?.run {
+            if (!startDateTime.isToday())
+                return MeetingStateType.EXCLUDED
+            return when {
+                Period(startDateTime, endDateTime).days < 1
+                        && Interval(
+                    startDateTime,
+                    endDateTime
+                ).containsNow() -> MeetingStateType.ONGOING
+                Period(startDateTime, endDateTime).days == 1 -> MeetingStateType.ALL_DAY
+                startDateTime.isAfterNow -> MeetingStateType.UPCOMING
+                else -> MeetingStateType.EXCLUDED
+            }
+        } ?: MeetingStateType.EXCLUDED
+
     fun createMeetingRoomDescriptionViewModel(meetingRoom: MeetingRoom): MeetingRoomDescriptionViewModel =
         MeetingRoomDescriptionViewModel(meetingRoom)
 
@@ -34,7 +50,7 @@ object Utils {
                 context?.getString(
                     R.string.label_meeting_time,
                     meeting?.startDateTime?.toString(context.getString(R.string.meeting_time_format)),
-                    meeting?.endDateTime?.toString(context.getString(R.string.format_date_time_meeting))
+                    meeting?.endDateTime?.toString(context.getString(R.string.meeting_time_format))
                 )
         )
 
@@ -47,16 +63,15 @@ object Utils {
         context: Context?,
         meetingList: List<Meeting>?
     ): MeetingListViewModel {
-        val meetingList =
-            meetingList?.filter { it.state() == MeetingStateType.UPCOMING }
         return MeetingListViewModel(
-            meetingList = meetingList,
-            labelData = meetingList.getLabelData(context, meetingList?.getOngoingMeeting() != null),
+            meetingList = meetingList?.filter { it.state() == MeetingStateType.UPCOMING },
+            labelData = meetingList?.getLabelData(context)
         )
     }
 
+
     fun mapToMeetingItemViewModel(meetings: List<Meeting>?): List<MeetingItemViewModel> =
-        meetings?.filter { it.startDateTime.isAfterNow }
+        meetings?.filter { it.state() == MeetingStateType.UPCOMING }
             ?.map {
                 MeetingItemViewModel(
                     type = it.state(),
@@ -64,12 +79,12 @@ object Utils {
                 )
             } ?: emptyList()
 
-
     fun List<Meeting>?.getOngoingMeeting(): Meeting? =
         this?.find { it.state() == MeetingStateType.ONGOING || it.state() == MeetingStateType.ALL_DAY }
 
     fun List<Meeting>?.updateMeetingRoom(meetingRoom: MeetingRoom): MeetingRoom =
         meetingRoom.copy(meetingList = this)
+
 
     fun Meeting?.getTimeString(context: Context?) = this?.run {
         if (this.state() == MeetingStateType.ALL_DAY)
@@ -82,51 +97,47 @@ object Utils {
             )
     }
 
-
     private fun List<Meeting>?.getLabelData(
-        context: Context?,
-        hasOngoing: Boolean?
-    ): Pair<String?, Int?> =
-        when {
-            this.isNullOrEmpty() -> Pair(
-                context?.getString(R.string.label_meetings_no_today),
-                R.style.textAppearanceMeetingCountBold
+        context: Context?
+    ): Triple<String, Int, Float> {
+        val filteredMeetingList = this?.filter { it.state() != MeetingStateType.EXCLUDED }
+        return when {
+            filteredMeetingList.isNullOrEmpty() -> Triple(
+                context?.getString(R.string.label_meetings_none_today) ?: "",
+                R.style.TextAppearanceMeetingCountBold,
+                context?.resources?.getDimension(R.dimen.space_small) ?: 0f
             )
-            this.size == 1 && hasOngoing == true -> Pair(
-                context?.getString(R.string.label_meetings_no_next),
-                R.style.textAppearanceMeetingCountBold
-            )
-            this.size == 1 && hasOngoing == false || this.size > 1 -> Pair(
-                context?.getString(R.string.label_meetings_next),
-                R.style.textAppearanceMeetingCountNormal
-            )
-            else -> Pair(null, null)
+            !filteredMeetingList.any { it.state() == MeetingStateType.UPCOMING } ->
+                Triple(
+                    context?.getString(R.string.label_meetings_no_next) ?: "",
+                    R.style.TextAppearanceMeetingCountBold,
+                    context?.resources?.getDimension(R.dimen.space_big) ?: 0f
+                )
+            filteredMeetingList.any { it.state() == MeetingStateType.ALL_DAY || it.state() == MeetingStateType.ONGOING } -> {
+                Triple(
+                    context?.getString(R.string.label_meetings_next) ?: "",
+                    R.style.TextAppearanceMeetingCountNormal,
+                    context?.resources?.getDimension(R.dimen.space_big) ?: 0f
+                )
+            }
+            !filteredMeetingList.any { it.state() == MeetingStateType.ALL_DAY || it.state() == MeetingStateType.ONGOING } -> {
+                Triple(
+                    context?.getString(R.string.label_meetings_next) ?: "",
+                    R.style.TextAppearanceMeetingCountNormal,
+                    context?.resources?.getDimension(R.dimen.space_small) ?: 0f
+                )
+            }
+            else -> Triple("", 0, 0f)
         }
+    }
 
-    private fun Meeting?.state(): MeetingStateType =
-        when {
-            this == null
-                    || !Interval(
-                DateTime.now()
-                    .withTimeAtStartOfDay(),
-                DateTime.now()
-                    .withTimeAtStartOfDay()
-                    .plusDays(1)
-            ).contains(this.startDateTime)
-            -> MeetingStateType.EXCLUDED
-            Period(startDateTime, endDateTime).days == 1
-            -> MeetingStateType.ALL_DAY
-            Interval(startDateTime, endDateTime).containsNow()
-            -> MeetingStateType.ONGOING
-            startDateTime.withTimeAtStartOfDay().millis ==
-                    DateTime.now()
-                        .withTimeAtStartOfDay().millis
-                    && startDateTime.isAfterNow
-            -> MeetingStateType.UPCOMING
-            else -> MeetingStateType.EXCLUDED
-        }
-
-
+    private fun DateTime?.isToday(): Boolean {
+        val now = DateTime.now()
+        return Interval(
+            now.withTimeAtStartOfDay(),
+            now.withTimeAtStartOfDay().plusDays(1)
+        ).contains(this)
+    }
 }
 
 

@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="textAppearanceMeetingCountNormal">
+    <style name="TextAppearanceMeetingCountNormal">
         <item name="android:textStyle">normal</item>
     </style>
-
-    <style name="textAppearanceMeetingCountBold">
+    <style name="TextAppearanceMeetingCountBold">
         <item name="android:textStyle">bold</item>
     </style>
+
+    <style name="Margin">
+        <item name="android:layout_marginTop">16dp</item>
+    </style>
+    <style name="MarginLarge">
+        <item name="android:layout_marginTop">30dp</item>
+    </style>
+
 </resources>

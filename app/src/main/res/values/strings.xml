@@ -11,11 +11,10 @@
 
     <string name="empty_meeting_room_list">No meeting rooms</string>
 
-    <string name="label_meetings_no_today">No meetings today</string>
+    <string name="label_meetings_none_today">No meetings today</string>
     <string name="label_meetings_no_next">No meetings up next</string>
     <string name="label_meetings_next">Up next:</string>
     <string name="label_meeting_time">%s - %s</string>
-    <string name="format_date_time_meeting">hh:MM</string>
 
     <string name="label_creator_label">Created by:</string>
 

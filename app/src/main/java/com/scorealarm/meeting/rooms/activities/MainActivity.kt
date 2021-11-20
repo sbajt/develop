@@ -17,8 +17,9 @@ import com.scorealarm.meeting.rooms.fragments.MeetingsListFragment
 import com.scorealarm.meeting.rooms.fragments.OngoingMeetingFragment
 import com.scorealarm.meeting.rooms.models.Meeting
 import com.scorealarm.meeting.rooms.models.MeetingRoom
+import com.scorealarm.meeting.rooms.models.types.MeetingStateType
 import com.scorealarm.meeting.rooms.rest.RestService
-import com.scorealarm.meeting.rooms.utils.Utils.getOngoingMeeting
+import com.scorealarm.meeting.rooms.utils.Utils.state
 import com.scorealarm.meeting.rooms.utils.Utils.updateMeetingRoom
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -78,10 +79,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onStop() {
         super.onStop()
         compositeDisposable.dispose()
-        removeMeetingRoomListFragment()
-        removeMeetingRoomDescriptionFragment()
-        removeOngoingMeetingFragment()
-        removeMeetingRoomMeetingsListFragment()
         isUpdatingOnDayChange = false
         isUpdatingWithTimer = false
     }
@@ -111,7 +108,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     fun onClearViewClick() {
         removeMeetingRoomDescriptionFragment()
         removeOngoingMeetingFragment()
-        removeMeetingRoomMeetingsListFragment()
+        removeMeetingsListFragment()
         meetingRoomSubject.cleanupBuffer()
         showMeetingRoomListFragment()
     }
@@ -200,7 +197,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .commit()
     }
 
-    private fun showMeetingRoomMeetingsListFragment() {
+    private fun showMeetingListFragment() {
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.listFragmentContainer,
@@ -210,7 +207,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .commit()
     }
 
-    private fun removeMeetingRoomMeetingsListFragment() {
+    private fun removeMeetingsListFragment() {
         val meetingRoomMeetingsListFragment =
             supportFragmentManager.findFragmentByTag(getString(R.string.meeting_room_meetings_list_fragment_tag))
         if (meetingRoomMeetingsListFragment != null)
@@ -232,15 +229,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .flatMap { RestService.getMeetingListByRoom(meetingRoom.id) }
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                val newMeetingRoomObject = it.updateMeetingRoom(meetingRoom)
-                if (it.isNotEmpty())
-                    persistMeetingRoom(newMeetingRoomObject)
-                showMeetingRoomDetailsFragments(it)
-                meetingRoomSubject.onNext(newMeetingRoomObject)
-            }) { Log.d(TAG, it.toString()) })
+            .subscribe({ updateMeetingList(it, meetingRoom) }) { Log.d(TAG, it.toString()) })
     }
-
 
     private fun updateMeetingRoomSubjectWithTimer(
         meetingRoom: MeetingRoom,
@@ -253,23 +243,28 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .filter { wifiManager.isWifiEnabled }
                 .flatMap { RestService.getMeetingListByRoom(meetingRoom.id) }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    val newMeetingRoomObject = it.updateMeetingRoom(meetingRoom)
-                    if (it.isNotEmpty())
-                        persistMeetingRoom(newMeetingRoomObject)
-                    showMeetingRoomDetailsFragments(it)
-                    meetingRoomSubject.onNext(newMeetingRoomObject)
-                }) { Log.e(TAG, it.toString()) }
+                .subscribe({ updateMeetingList(it, meetingRoom) }) { Log.e(TAG, it.toString()) }
         )
+    }
+
+    private fun updateMeetingList(
+        meetings: List<Meeting>,
+        meetingRoom: MeetingRoom
+    ) {
+        val newMeetingRoomObject = meetings.updateMeetingRoom(meetingRoom)
+        if (meetings.isNotEmpty())
+            persistMeetingRoom(newMeetingRoomObject)
+        showMeetingRoomDetailsFragments(meetings)
+        meetingRoomSubject.onNext(newMeetingRoomObject)
     }
 
     private fun showMeetingRoomDetailsFragments(meetingList: List<Meeting>) {
         if (!MeetingRoomDescriptionFragment.isAlive)
             showMeetingRoomDescriptionFragment()
-        if (meetingList.getOngoingMeeting() != null && !OngoingMeetingFragment.isAlive)
+        if (!OngoingMeetingFragment.isAlive && meetingList.any { it.state() == MeetingStateType.ONGOING || it.state() == MeetingStateType.ALL_DAY })
             showOngoingMeetingFragment()
         if (!MeetingsListFragment.isAlive)
-            showMeetingRoomMeetingsListFragment()
+            showMeetingListFragment()
     }
 
 

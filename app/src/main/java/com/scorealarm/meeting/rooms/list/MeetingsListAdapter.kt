@@ -7,7 +7,7 @@ import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.list.viewholders.MeetingViewHolder
 import com.scorealarm.meeting.rooms.models.MeetingItemViewModel
 
-class MeetingRoomMeetingsListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MeetingsListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<MeetingItemViewModel>()
 

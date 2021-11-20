@@ -6,16 +6,17 @@ import androidx.fragment.app.Fragment
 import com.scorealarm.meeting.rooms.R
 import com.scorealarm.meeting.rooms.activities.MainActivity
 import com.scorealarm.meeting.rooms.fragments.models.MeetingListViewModel
-import com.scorealarm.meeting.rooms.list.MeetingRoomMeetingsListAdapter
+import com.scorealarm.meeting.rooms.list.MeetingsListAdapter
 import com.scorealarm.meeting.rooms.utils.Utils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_list.*
+import kotlin.math.roundToInt
 
 class MeetingsListFragment : Fragment(R.layout.fragment_list) {
 
-    private val listAdapter = MeetingRoomMeetingsListAdapter()
+    private val listAdapter = MeetingsListAdapter()
     private val compositeDisposable = CompositeDisposable()
 
     override fun onStart() {
@@ -39,16 +40,19 @@ class MeetingsListFragment : Fragment(R.layout.fragment_list) {
     }
 
 
-    private fun bind(meetingRoomMeetingListViewModel: MeetingListViewModel) {
-        meetingRoomMeetingListViewModel.run {
+    private fun bind(meetingListViewModel: MeetingListViewModel) {
+        meetingListViewModel.run {
             listAdapter.update(Utils.mapToMeetingItemViewModel(this.meetingList))
-            if (labelData.first != null)
+            if (labelData != null) {
                 textView?.run {
                     visibility = View.VISIBLE
                     text = labelData.first
-                    if (labelData.second != null)
-                        setTextAppearance(labelData.second ?: 0)
+                    setTextAppearance(labelData.second)
                 }
+                Log.d(TAG, labelData.third.toString())
+                view?.setPadding(0, labelData.third.roundToInt(), 0, 0)
+                view?.requestLayout()
+            }
         }
     }
 

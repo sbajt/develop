@@ -4,5 +4,5 @@ import com.scorealarm.meeting.rooms.models.Meeting
 
 data class MeetingListViewModel(
     val meetingList: List<Meeting>?,
-    val labelData: Pair<String?, Int?>
+    val labelData: Triple<String, Int, Float>?
 )
